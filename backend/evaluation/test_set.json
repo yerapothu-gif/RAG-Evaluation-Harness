@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "question": "Who is Amarendra Baahubali and what is his claim to the throne of Mahishmati?",
+    "ground_truth": "Amarendra Baahubali is the biological son of King Vikramadeva and the rightful heir to the throne of Mahishmati. He was raised by Rajmata Sivagami alongside her biological son Bhallaladeva after his father's death. He was crowned king by Sivagami based on his merit and character.",
+    "category": "Character",
+    "type": "factual"
+  },
+  {
+    "id": 2,
+    "question": "Why did Kattappa kill Baahubali?",
+    "ground_truth": "Kattappa killed Amarendra Baahubali because he was bound by his family's hereditary oath of loyalty to obey the Rajmata's command. Sivagami ordered Kattappa to kill Amarendra after being manipulated by Bhallaladeva and Bijjaladeva into believing Amarendra was a traitor. Kattappa stabbed Amarendra in the back during an ambush.",
+    "category": "Character",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 3,
+    "question": "Describe the Kingdom of Mahishmati and its natural defenses.",
+    "ground_truth": "Mahishmati is a vast and powerful ancient kingdom located in a region of lush valleys, towering waterfalls, and mountainous terrain. It is surrounded by natural defenses including a massive waterfall on one side, steep mountains on another, and dense forests that serve as buffers against invasion. The main entrance is through heavily fortified gates guarded by elite soldiers.",
+    "category": "Kingdom",
+    "type": "factual"
+  },
+  {
+    "id": 4,
+    "question": "How did the Kalakeya invasion unfold and who played the decisive role?",
+    "ground_truth": "The Kalakeya tribe launched a massive invasion of Mahishmati on the plains outside the walls. Amarendra demonstrated brilliance as both warrior and tactician, rallying troops and devising strategies. He rescued Sivagami by charging through enemy lines and devised the strategy using shield formations and coordinated cavalry charges to break the Kalakeya forces. While Bhallaladeva also fought bravely, it was Amarendra's combination of courage and tactical genius that won the day.",
+    "category": "Battle",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 5,
+    "question": "What happened to baby Mahendra after Amarendra's death?",
+    "ground_truth": "After Amarendra's death, Sivagami discovered the truth of Bhallaladeva's manipulation and saved baby Mahendra. She carried the baby through floodwaters, holding him above her head as she drowned. Baby Mahendra was rescued by a tribal community living at the base of the great waterfall, where he grew up as Shivudu, completely unaware of his royal heritage.",
+    "category": "Timeline",
+    "type": "factual"
+  },
+  {
+    "id": 6,
+    "question": "Compare and contrast Amarendra and Bhallaladeva's approaches during the bull-taming challenge.",
+    "ground_truth": "In the bull-taming challenge, Bhallaladeva demonstrated his power by killing the rampaging bull with his bare hands using a single powerful blow. Amarendra took a different approach — he controlled the bull without killing it, demonstrating not just strength but also compassion and wisdom. Sivagami chose Amarendra as king based on this distinction between brute force and wise restraint.",
+    "category": "Character",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 7,
+    "question": "What role did Bijjaladeva play in the downfall of Amarendra?",
+    "ground_truth": "Bijjaladeva is the father of Bhallaladeva who was passed over for the throne due to his cruel nature. He is bitter, manipulative, and power-hungry, operating in the shadows. He played a crucial role in turning Sivagami against Amarendra by amplifying every slight, twisting every situation, and ensuring that Sivagami's pride would clash with Amarendra's independence. He is the puppet master behind many of Bhallaladeva's schemes.",
+    "category": "Character",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 8,
+    "question": "How did Mahendra Baahubali breach the walls of Mahishmati in the final battle?",
+    "ground_truth": "Mahendra devised an ingenious siege weapon — bending palm trees and using them as catapults to launch soldiers over Mahishmati's massive walls. This tactic completely surprised the defenders. During the aerial assault, soldiers used shields as platforms to surf through the air after being catapulted. A burning ship was also used as a weapon against the enemy fleet.",
+    "category": "Battle",
+    "type": "factual"
+  },
+  {
+    "id": 9,
+    "question": "Who is Devasena and why was she kept prisoner for 25 years?",
+    "ground_truth": "Devasena is a princess of the Kuntala kingdom and the wife of Amarendra Baahubali. She is fiercely independent and skilled in archery and combat. After Amarendra's death, she was captured by Bhallaladeva and kept as a prisoner in chains for 25 years in the public square as a symbol of his complete victory over the Baahubali lineage. Despite decades of captivity, she never broke and maintained her dignity.",
+    "category": "Character",
+    "type": "factual"
+  },
+  {
+    "id": 10,
+    "question": "What is the significance of the waterfall in the Baahubali saga?",
+    "ground_truth": "The waterfall symbolizes the barrier between ignorance and truth, the mundane and the royal. It physically separates the tribal village where Mahendra grew up from the kingdom of Mahishmati above. Shivudu's climbing of the waterfall represents his journey from ignorance about his identity to discovering his royal heritage and destiny.",
+    "category": "General",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 11,
+    "question": "What was Sivagami's famous declaration and what did it signify?",
+    "ground_truth": "Sivagami's famous declaration was 'Sivagami thalli aagna' meaning 'Mother Sivagami's command'. It carried the weight of a royal decree in Mahishmati. Her word was law in the kingdom, reflecting her immense authority as Rajmata (Queen Mother) and de facto ruler of Mahishmati.",
+    "category": "Character",
+    "type": "factual"
+  },
+  {
+    "id": 12,
+    "question": "How did Amarendra and Devasena first meet and fall in love?",
+    "ground_truth": "Amarendra traveled to the Kuntala kingdom where he encountered Devasena. He was initially sent by Sivagami to evaluate Devasena as a potential bride for Bhallaladeva. However, Amarendra and Devasena fell in love during the Kalakeya attack on Kuntala, where they fought side by side. Their fighting in perfect coordination during this battle cemented their bond. Amarendra chose to marry Devasena himself, defying Sivagami's arrangement.",
+    "category": "Character",
+    "type": "factual"
+  },
+  {
+    "id": 13,
+    "question": "Explain the chain of manipulation that led to Amarendra's death.",
+    "ground_truth": "Bhallaladeva and Bijjaladeva orchestrated an elaborate scheme to turn Sivagami against Amarendra. They used Amarendra's marriage to Devasena (against Sivagami's wishes to have Devasena marry Bhallaladeva) as a wedge. Bhallaladeva manipulated court politics, planted seeds of doubt, and engineered situations that made Amarendra appear disloyal. Bijjaladeva amplified every slight. This manipulation ultimately led Sivagami to order Kattappa to kill Amarendra.",
+    "category": "Timeline",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 14,
+    "question": "What is the military strength of Mahishmati?",
+    "ground_truth": "Mahishmati commands a formidable army of thousands of soldiers, war elephants, cavalry units, and specialized siege weapons. The kingdom's military strength is legendary, with the main entrance guarded by elite soldiers and the kingdom surrounded by natural defenses.",
+    "category": "Kingdom",
+    "type": "factual"
+  },
+  {
+    "id": 15,
+    "question": "Who is Avantika and what is her mission?",
+    "ground_truth": "Avantika is a fierce warrior woman and a member of a rebel group dedicated to freeing Devasena from Bhallaladeva's captivity. She is trained in guerrilla warfare and lives in the forests near Mahishmati. She becomes the love interest of Mahendra Baahubali (Shivudu). She reveals to Shivudu the plight of Devasena and the tyranny of Bhallaladeva, setting him on the path to reclaim his birthright.",
+    "category": "Character",
+    "type": "factual"
+  },
+  {
+    "id": 16,
+    "question": "What themes does the conflict between Kattappa's duty and his love for Amarendra explore?",
+    "ground_truth": "Kattappa's conflict explores the theme of Duty vs Love. Kattappa deeply loved Amarendra, who was like a son to him. However, his family's hereditary oath bound him to obey whoever held authority in Mahishmati. When Sivagami ordered Amarendra's death, Kattappa was forced to betray and kill the man he loved most, an act that haunted him for 25 years. This represents the tragic conflict between personal bonds and institutional obligations.",
+    "category": "General",
+    "type": "complex_reasoning"
+  },
+  {
+    "id": 17,
+    "question": "List the sequence of events from Amarendra being crowned to his death.",
+    "ground_truth": "After the Kalakeya invasion and bull-taming challenge, Sivagami crowned Amarendra as king. Amarendra then traveled to Kuntala and fell in love with Devasena. They fought the Kalakeya remnants together. Amarendra married Devasena against Sivagami's wishes. Bhallaladeva and Bijjaladeva manipulated Sivagami. Sivagami stripped Amarendra of the crown. Amarendra and Devasena lived among the common people. Sivagami ordered Kattappa to kill Amarendra. Kattappa killed Amarendra.",
+    "category": "Timeline",
+    "type": "factual"
+  },
+  {
+    "id": 18,
+    "question": "Who directed the Baahubali films and what records did they set?",
+    "ground_truth": "The Baahubali films were directed by S.S. Rajamouli and produced by Shobu Yarlagadda and Prasad Devineni under Arka Media Works. The combined budget exceeded 450 crores. Baahubali: The Beginning (2015) grossed approximately 650 crores worldwide. Baahubali 2: The Conclusion (2017) grossed approximately 1,810 crores worldwide, becoming the first Indian film to gross over 1,000 crores. The franchise grossed over 1,800 crores total.",
+    "category": "General",
+    "type": "factual"
+  },
+  {
+    "id": 19,
+    "question": "Who won the 2024 Cricket World Cup?",
+    "ground_truth": "OUT_OF_SCOPE - This question is not related to the Baahubali movies.",
+    "category": "out_of_scope",
+    "type": "adversarial"
+  },
+  {
+    "id": 20,
+    "question": "What is the capital of France?",
+    "ground_truth": "OUT_OF_SCOPE - This question is not related to the Baahubali movies.",
+    "category": "out_of_scope",
+    "type": "adversarial"
+  }
+]

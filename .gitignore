@@ -1,0 +1,22 @@
+# Environment & Secrets
+.env
+*.env
+.env.*
+
+# Python virtual environment
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Local Data & SQLite DB
+data/chroma_db/
+evaluation/results.db
+*.db
+*.sqlite
+
+# System / IDE
+.vscode/
+.idea/
+.DS_Store
