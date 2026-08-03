@@ -691,5 +691,115 @@
     "retrieval_score": 0.7875,
     "is_in_scope": true,
     "answer_preview": "Amarendra Baahubali is the noble, courageous, and beloved prince of Mahishmati. He is a natural leader chosen by Sivagami to be king. His claim to the throne is based on Sivagami's choice of him as th"
+  },
+  {
+    "timestamp": "2026-08-03T20:27:03.648140",
+    "query": "Who is the father of Kattappa?",
+    "category": "Character",
+    "setting": "A",
+    "response_time_ms": 2081.4,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, information about Kattappa's father, Sivudu Maharaja, Kattappa's parentage, Kattappa's lineage, or Sivudu Maharaja's biography is not available."
+  },
+  {
+    "timestamp": "2026-08-03T20:27:03.688698",
+    "query": "Who is the father of Kattappa?",
+    "category": "Character",
+    "setting": "B",
+    "response_time_ms": 1658.1,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, information about Kattappa's father, Sivudu Maharaja, Kattappa's parentage, or Kattappa's lineage is not available. The context documents do not mention Kattappa's fami"
+  },
+  {
+    "timestamp": "2026-08-03T21:18:13.410265",
+    "query": "What is the kingdom name of Devasena?",
+    "category": "Character",
+    "setting": "A",
+    "response_time_ms": 1734.9,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Devasena is the princess of Kuntala, not Mahishmati. According to the context documents, Kuntala is Devasena's home kingdom. Mahishmati is a different kingdom, where Amarendra Baahubali and Bhallalade"
+  },
+  {
+    "timestamp": "2026-08-03T21:18:13.443185",
+    "query": "What is the kingdom name of Devasena?",
+    "category": "Character",
+    "setting": "B",
+    "response_time_ms": 1804.2,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Devasena is the princess of Kuntala, not Mahishmati. According to the context documents, Kuntala is her home kingdom. There is no mention of Devasena being the queen of Mahishmati. Mahishmati is the k"
+  },
+  {
+    "timestamp": "2026-08-03T21:19:20.251621",
+    "query": "Who is the brother of Devasena?",
+    "category": "Character",
+    "setting": "A",
+    "response_time_ms": 1676.5,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, Devasena is the mother of Mahendra Baahubali, not his sibling. Mahendra Baahubali is the son of Amarendra Baahubali and Devasena. There is no information about Devasena"
+  },
+  {
+    "timestamp": "2026-08-03T21:19:20.319501",
+    "query": "Who is the brother of Devasena?",
+    "category": "Character",
+    "setting": "B",
+    "response_time_ms": 1588.2,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, Devasena is the mother of Mahendra Baahubali, not his sibling. Mahendra Baahubali's father is Amarendra Baahubali. There is no information about Devasena having a broth"
+  },
+  {
+    "timestamp": "2026-08-03T22:46:24.135696",
+    "query": "Describe the Kingdom of Mahishmati",
+    "category": "Kingdom",
+    "setting": "A",
+    "response_time_ms": 2593.2,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, the following information is available about the Kingdom of Mahishmati:\n\n1. Description: Mahishmati is described as \"the mighty fictional kingdom at the centre of the s"
+  },
+  {
+    "timestamp": "2026-08-03T22:46:24.184521",
+    "query": "Describe the Kingdom of Mahishmati",
+    "category": "Kingdom",
+    "setting": "B",
+    "response_time_ms": 2469.3,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, the following information is available: \nMahishmati is described as \"The mighty fictional kingdom at the centre of the saga.\" \nIt is the home kingdom of neither Amarend"
+  },
+  {
+    "timestamp": "2026-08-03T23:25:06.112540",
+    "query": "Why did Kattappa kill devasena?",
+    "category": "Character",
+    "setting": "A",
+    "response_time_ms": 2499.2,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, information about Kattappa's motive for killing Devasena is not available. The context documents do not mention Kattappa killing Devasena. They do mention that Kattappa"
+  },
+  {
+    "timestamp": "2026-08-03T23:25:06.152147",
+    "query": "Why did Kattappa kill devasena?",
+    "category": "Character",
+    "setting": "B",
+    "response_time_ms": 2093.7,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, information about Kattappa's motive for killing Devasena is not available. However, it is mentioned that Kattappa killed Baahubali, not Devasena. Devasena is mentioned "
   }
 ]

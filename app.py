@@ -23,7 +23,7 @@ st.set_page_config(
 )
 
 # --- Imports ---
-from src.theme import get_custom_css, render_ornament, render_category_pill, render_scope_pill
+from src.theme import get_custom_css, render_ornament, render_category_pill, render_scope_pill, render_section_header
 from src.config import (
     SETTING_A, SETTING_B, ROYAL_GOLD, DEEP_MAROON, DARK_BROWN,
     WARM_CREAM, MUTED_GOLD, EMBER_ORANGE, BLOOD_RED, KNOWLEDGE_BASE_PATH,
@@ -65,6 +65,8 @@ init_session_state()
 st.markdown(get_custom_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
 
+
+
 # ═══════════════════════════════════════════
 # INDEX BUILDING
 # ═══════════════════════════════════════════
@@ -95,36 +97,40 @@ def build_all_indexes():
 # ═══════════════════════════════════════════
 
 with st.sidebar:
-    st.markdown("# :material/shield: Mahishmati\nArchives")
+    # ── Brand Header ───────────────────────────────────────────────
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] .stMarkdown h2 { text-align: center; color: #D4AF37; margin-bottom: -15px; }
+        </style>
+    """, unsafe_allow_html=True)
+    st.markdown("## :material/shield:")
+    st.markdown("""
+        <div class="sidebar-brand">
+        <p class="sidebar-brand-title">Mahishmati</p>
+        <p class="sidebar-brand-title" style="font-size:0.85rem; letter-spacing:4px;">Archives</p>
+        <p class="sidebar-brand-subtitle">Baahubali RAG Harness</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # Dark/Light Mode Toggle
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button(":material/dark_mode: Dark", use_container_width=True,
-                      type="primary" if st.session_state.dark_mode else "secondary"):
-            st.session_state.dark_mode = True
-            st.rerun()
-    with col2:
-        if st.button(":material/light_mode: Light", use_container_width=True,
-                      type="primary" if not st.session_state.dark_mode else "secondary"):
-            st.session_state.dark_mode = False
-            st.rerun()
-
-    st.markdown(render_ornament(), unsafe_allow_html=True)
-
-    # Navigation
-    st.markdown("### :material/history_edu: Navigation")
+    # ── Navigation ─────────────────────────────────────────────────
+    st.markdown('<p style="font-family: Cinzel, serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: #B8A990; margin-bottom: 6px;">Navigation</p>', unsafe_allow_html=True)
     page = st.radio(
-        "Select Page",
-        [":material/shield: Query Engine", ":material/bar_chart: Evaluation Harness", ":material/show_chart: Search Analytics", ":material/hub: Character Map"],
+        "Navigate",
+        [
+            ":material/shield: Query Engine",
+            ":material/bar_chart: Evaluation Harness",
+            ":material/show_chart: Search Analytics",
+            ":material/hub: Character Map",
+        ],
         label_visibility="collapsed",
     )
 
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # System Status
-    st.markdown("### :material/fort: System Status")
+    # ── System Status ───────────────────────────────────────────────
+    st.markdown('<p style="font-family: Cinzel, serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: #B8A990; margin-bottom: 6px;">System Status</p>', unsafe_allow_html=True)
 
     # Check all 3 provider keys
     has_groq   = bool(GROQ_API_KEY and not GROQ_API_KEY.startswith("your_"))
@@ -138,19 +144,32 @@ with st.sidebar:
         if has_groq:   providers.append("Groq")
         if has_gemini: providers.append("Gemini")
         if has_grok:   providers.append("Grok")
-        llm_status = f":material/check_circle: Pooled: {' + '.join(providers)}"
+        llm_label = f"Pooled: {' + '.join(providers)}"
+        llm_dot_cls = "status-dot-active"
     elif has_groq:
-        llm_status = ":material/check_circle: Groq (llama-3.3-70b)"
+        llm_label = "Groq \u00b7 llama-3.3-70b"
+        llm_dot_cls = "status-dot-active"
     elif has_gemini:
-        llm_status = ":material/check_circle: Gemini (gemini-2.0-flash)"
+        llm_label = "Gemini \u00b7 gemini-2.0-flash"
+        llm_dot_cls = "status-dot-active"
     elif has_grok:
-        llm_status = ":material/check_circle: Grok (grok-3-mini-fast)"
+        llm_label = "Grok \u00b7 grok-3-mini-fast"
+        llm_dot_cls = "status-dot-active"
     elif has_custom:
-        llm_status = ":material/check_circle: Custom Key Active"
+        llm_label = "Custom Key Active"
+        llm_dot_cls = "status-dot-active"
     else:
-        llm_status = "⚡ Offline Direct Synthesis"
+        llm_label = "Offline Synthesis"
+        llm_dot_cls = "status-dot-offline"
 
-    st.markdown(f"**LLM Engine:** {llm_status}")
+    st.markdown(f"""
+    <div style="background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.15); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #B8A990; margin-bottom: 6px; font-family: Outfit, sans-serif;">LLM Engine</div>
+        <div style="font-size: 0.88rem; color: #E8DCC8; font-family: Outfit, sans-serif;">
+            <span class="status-dot {llm_dot_cls}"></span>{llm_label}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if not st.session_state.index_built:
         with st.spinner("Building Mahishmati Archives..."):
@@ -163,15 +182,39 @@ with st.sidebar:
                 st.error(f"Index build failed: {e}")
 
     if st.session_state.index_built:
-        st.markdown(f"**Vector Index:** :material/check_circle: Built")
-        st.markdown(f"**Setting A Chunks:** {len(st.session_state.chunks_a)}")
-        st.markdown(f"**Setting B Chunks:** {len(st.session_state.chunks_b)}")
+        idx_dot_cls = "status-dot-active"
+        idx_status  = "Built"
+        chunk_a_n = len(st.session_state.chunks_a)
+        chunk_b_n = len(st.session_state.chunks_b)
     else:
-        st.markdown("**Vector Index:** :material/hourglass_empty: Building...")
+        idx_dot_cls = "status-dot-pending"
+        idx_status  = "Building..."
+        chunk_a_n = "\u2014"
+        chunk_b_n = "\u2014"
+
+    st.markdown(f"""
+    <div style="background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.15); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #B8A990; margin-bottom: 8px; font-family: Outfit, sans-serif;">Vector Index</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 0.82rem; color: #B8A990; font-family: Outfit, sans-serif;">Status</span>
+            <span style="font-size: 0.82rem; color: #E8DCC8; font-family: Outfit, sans-serif;">
+                <span class="status-dot {idx_dot_cls}"></span>{idx_status}
+            </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 0.82rem; color: #B8A990; font-family: Outfit, sans-serif;">Setting A Chunks</span>
+            <span style="font-size: 0.82rem; color: #D4AF37; font-family: Cinzel, serif; font-weight: 600;">{chunk_a_n}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: #B8A990; font-family: Outfit, sans-serif;">Setting B Chunks</span>
+            <span style="font-size: 0.82rem; color: #D4AF37; font-family: Cinzel, serif; font-weight: 600;">{chunk_b_n}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # Settings Info
+    # ── Settings Expander ───────────────────────────────────────────
     with st.expander(":material/settings: Retrieval & API Settings"):
         custom_key_val = st.text_input(
             ":material/key: API Key Override",
@@ -187,15 +230,39 @@ with st.sidebar:
 
         st.markdown(f"""
         **Setting A** — Dense Vector
-        - Chunk size: {SETTING_A['chunk_size']}
-        - Overlap: {SETTING_A['chunk_overlap']}
+        - Chunk size: `{SETTING_A['chunk_size']}`
+        - Overlap: `{SETTING_A['chunk_overlap']}`
         - Method: ChromaDB cosine similarity
 
         **Setting B** — Hybrid RRF
-        - Chunk size: {SETTING_B['chunk_size']}
-        - Overlap: {SETTING_B['chunk_overlap']}
+        - Chunk size: `{SETTING_B['chunk_size']}`
+        - Overlap: `{SETTING_B['chunk_overlap']}`
         - Method: BM25 + Dense + RRF (k=60)
         """)
+
+    st.markdown(render_ornament(), unsafe_allow_html=True)
+
+    # ── Theme Toggle (bottom of sidebar) ───────────────────────────
+    st.markdown('<p style="font-family: Cinzel, serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: #B8A990; margin-bottom: 6px;">Appearance</p>', unsafe_allow_html=True)
+    t_col1, t_col2 = st.columns(2)
+    with t_col1:
+        if st.button(
+            ":material/dark_mode: Dark" if not st.session_state.dark_mode else ":material/dark_mode: Dark \u2713",
+            use_container_width=True,
+            type="primary" if st.session_state.dark_mode else "secondary",
+            key="btn_dark_mode",
+        ):
+            st.session_state.dark_mode = True
+            st.rerun()
+    with t_col2:
+        if st.button(
+            ":material/light_mode: Light \u2713" if not st.session_state.dark_mode else ":material/light_mode: Light",
+            use_container_width=True,
+            type="primary" if not st.session_state.dark_mode else "secondary",
+            key="btn_light_mode",
+        ):
+            st.session_state.dark_mode = False
+            st.rerun()
 
 
 
@@ -299,11 +366,12 @@ def create_radar_chart(scores_a: dict, scores_b: dict) -> go.Figure:
 
 if page == ":material/shield: Query Engine":
     st.markdown("# :material/shield: Royal Query Engine")
-    st.markdown("*Summon knowledge from the Mahishmati Archives*")
+    st.markdown('<p class="page-subtitle">Summon knowledge from the Mahishmati Archives</p>', unsafe_allow_html=True)
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # Preset query pills
-    st.markdown("##### :material/target: Quick Queries")
+    # ── Preset Query Pills ────────────────────────────────────────
+    st.markdown("### :material/bolt: Quick Queries")
+    st.markdown('<div class="section-header-line" style="margin-bottom: 24px;"></div>', unsafe_allow_html=True)
     pill_cols = st.columns(4)
     preset_queries = [
         "Why did Kattappa kill Baahubali?",
@@ -314,18 +382,20 @@ if page == ":material/shield: Query Engine":
 
     for i, pq in enumerate(preset_queries):
         with pill_cols[i % 4]:
-            if st.button(pq, key=f"preset_{i}", use_container_width=True):
+            if st.button(pq, key=f"preset_{i}", use_container_width=True, type="secondary"):
                 st.session_state["user_query_text"] = pq
                 st.rerun()
 
-    # Main query form (supports Enter key & Button click)
+    # ── Main Query Form ───────────────────────────────────────────
+    st.markdown(render_section_header("Ask the Royal Archivist", "search"), unsafe_allow_html=True)
     with st.form(key="query_form", clear_on_submit=False):
         query = st.text_input(
-            ":material/search: Ask the Royal Archivist",
-            placeholder="Enter your question about the Baahubali saga... (Press Enter or click below)",
+            "Your Question",
+            placeholder="Enter your question about the Baahubali saga...",
             key="user_query_text",
+            label_visibility="collapsed",
         )
-        submitted = st.form_submit_button(":material/shield: Seek Knowledge", type="primary", use_container_width=True)
+        submitted = st.form_submit_button(":material/shield: Seek Knowledge from the Archives", type="primary", use_container_width=True)
 
     active_query = query.strip() if (submitted and query.strip()) else ""
 
@@ -382,38 +452,53 @@ if page == ":material/shield: Query Engine":
                 with st.spinner(":material/shield: Consulting the Royal Archives..."):
                     results = run_query(search_query, "both", custom_api_key=custom_key)
 
-                # Display side-by-side results
+                # ── Side-by-Side Results ──────────────────────────
+                st.markdown(render_ornament(), unsafe_allow_html=True)
+                st.markdown("### :material/menu_book: Retrieval Results")
+                st.markdown('<div class="section-header-line" style="margin-bottom: 24px;"></div>', unsafe_allow_html=True)
                 col_a, col_b = st.columns(2)
 
                 with col_a:
-                    st.markdown("### :material/radio_button_checked: Setting A — Dense Vector")
+                    st.markdown("""
+                    <div class="result-card-header" style="display: flex; align-items: center; gap: 8px;">
+                    """, unsafe_allow_html=True)
+                    st.markdown("#### :material/bolt: Setting A — Dense Vector")
+                    st.markdown("</div>", unsafe_allow_html=True)
                     if "A" in results:
                         r = results["A"]
-                        st.markdown(f":material/timer: Response time: **{r['time']:.2f}s**")
-                        st.markdown(f":material/bar_chart: Tokens used: **{r['answer']['tokens_used']}**")
-                        st.markdown("---")
+                        meta_col1, meta_col2 = st.columns(2)
+                        with meta_col1:
+                            st.metric("Response Time", f"{r['time']:.2f}s")
+                        with meta_col2:
+                            st.metric("Tokens Used", r['answer']['tokens_used'])
                         st.markdown(r["answer"]["answer"])
 
                         with st.expander(f":material/description: Context Chunks ({len(r['chunks'])} retrieved)"):
                             for i, chunk in enumerate(r["chunks"]):
                                 sim = chunk.get("similarity", 0)
-                                st.markdown(f"**Chunk {i+1}** (similarity: {sim:.4f})")
+                                st.markdown(f"**Chunk {i+1}** — similarity: `{sim:.4f}`")
                                 st.markdown(f"> {chunk['text'][:500]}...")
                                 st.markdown("---")
 
                 with col_b:
-                    st.markdown("### :material/radio_button_checked: Setting B — Hybrid RRF")
+                    st.markdown("""
+                    <div class="result-card-header" style="display: flex; align-items: center; gap: 8px;">
+                    """, unsafe_allow_html=True)
+                    st.markdown("#### :material/psychology: Setting B — Hybrid RAG")
+                    st.markdown("</div>", unsafe_allow_html=True)
                     if "B" in results:
                         r = results["B"]
-                        st.markdown(f":material/timer: Response time: **{r['time']:.2f}s**")
-                        st.markdown(f":material/bar_chart: Tokens used: **{r['answer']['tokens_used']}**")
-                        st.markdown("---")
+                        meta_col1, meta_col2 = st.columns(2)
+                        with meta_col1:
+                            st.metric("Response Time", f"{r['time']:.2f}s")
+                        with meta_col2:
+                            st.metric("Tokens Used", r['answer']['tokens_used'])
                         st.markdown(r["answer"]["answer"])
 
                         with st.expander(f":material/description: Context Chunks ({len(r['chunks'])} retrieved)"):
                             for i, chunk in enumerate(r["chunks"]):
                                 rrf = chunk.get("rrf_score", 0)
-                                st.markdown(f"**Chunk {i+1}** (RRF score: {rrf:.6f})")
+                                st.markdown(f"**Chunk {i+1}** — RRF score: `{rrf:.6f}`")
                                 st.markdown(f"> {chunk['text'][:500]}...")
                                 st.markdown("---")
 
@@ -439,7 +524,7 @@ if page == ":material/shield: Query Engine":
 
 elif page == ":material/bar_chart: Evaluation Harness":
     st.markdown("# :material/bar_chart: Royal Evaluation Chamber")
-    st.markdown("*Measure the worthiness of each retrieval strategy*")
+    st.markdown('<p class="page-subtitle">Measure the worthiness of each retrieval strategy</p>', unsafe_allow_html=True)
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     tab_run, tab_history = st.tabs([":material/rocket_launch: Run Evaluation", ":material/history_edu: Evaluation History"])
@@ -450,24 +535,25 @@ elif page == ":material/bar_chart: Evaluation Harness":
 
         test_set = load_test_set()
 
+        st.markdown(render_section_header("Test Set Overview", "table_rows"), unsafe_allow_html=True)
         col_info, col_actions = st.columns([2, 1])
         with col_info:
-            st.markdown(f"**Test Set:** {len(test_set)} questions loaded")
             type_counts = {}
             for q in test_set:
                 if isinstance(q, dict):
                     t = q.get("type", "unknown")
                     type_counts[t] = type_counts.get(t, 0) + 1
-            st.markdown(f"Distribution: {', '.join(f'{t}: {c}' for t, c in type_counts.items())}")
+            dist_str = "  ·  ".join(f"**{t}**: {c}" for t, c in type_counts.items())
+            st.markdown(f"**{len(test_set)} questions loaded** — {dist_str}")
 
         with col_actions:
-            if st.button(":material/sync: Re-generate Test Set (LLM)", use_container_width=True):
+            if st.button(":material/sync: Re-generate Test Set", use_container_width=True, type="secondary"):
                 if has_groq or has_gemini or has_grok or has_custom:
                     with st.spinner("Generating test set with LLM-as-Teacher..."):
                         new_set = generate_test_set(20)
                         if new_set:
                             save_test_set(new_set)
-                            st.success(f"Generated {len(new_set)} questions!")
+                            st.success("Generated " + str(len(new_set)) + " questions!")
                             st.rerun()
                 else:
                     st.error("Configure GROQ_API_KEY, GEMINI_API_KEY, or XAI_API_KEY to generate.")
@@ -475,7 +561,8 @@ elif page == ":material/bar_chart: Evaluation Harness":
         st.markdown(render_ornament(), unsafe_allow_html=True)
 
         # Select how many to evaluate
-        num_eval = st.slider("Questions to evaluate", 1, len(test_set), min(5, len(test_set)))
+        st.markdown(render_section_header("Evaluation Configuration", "tune"), unsafe_allow_html=True)
+        num_eval = st.slider("Number of questions to evaluate", 1, len(test_set), min(5, len(test_set)))
 
         if st.button(":material/shield: Run Full Evaluation", type="primary", use_container_width=True):
             if not st.session_state.index_built:
@@ -654,7 +741,7 @@ elif page == ":material/bar_chart: Evaluation Harness":
                 _log_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(_log_path, "a", encoding="utf-8") as _f:
                     _f.write(_json.dumps(_run_record, ensure_ascii=False) + "\n")
-                st.toast("💾 Run saved to evaluation history", icon=":material/history_edu:")
+                st.toast("Run saved to evaluation history", icon=":material/history_edu:")
 
         # Display results if available
         if st.session_state.eval_results_a and st.session_state.eval_results_b:
@@ -670,8 +757,8 @@ elif page == ":material/bar_chart: Evaluation Harness":
             avg_a = {m: avg_metric(results_a, m) for m in metrics}
             avg_b = {m: avg_metric(results_b, m) for m in metrics}
 
-            # Metric Scorecards
-            st.markdown("### :material/bar_chart: Metric Scorecards")
+            # ── Metric Scorecards ─────────────────────────────────
+            st.markdown(render_section_header("Metric Scorecards", "bar_chart"), unsafe_allow_html=True)
             m_cols = st.columns(4)
             metric_labels = ["Faithfulness", "Answer Relevance", "Context Recall", "Context Precision"]
 
@@ -688,8 +775,8 @@ elif page == ":material/bar_chart: Evaluation Harness":
 
             st.markdown(render_ornament(), unsafe_allow_html=True)
 
-            # Radar Chart
-            st.markdown("### :material/target: Radar Comparison")
+            # ── Radar Chart ───────────────────────────────────────
+            st.markdown(render_section_header("Radar Comparison — A vs B", "radar"), unsafe_allow_html=True)
             avg_scores_a = {m: {"score": avg_a[m]} for m in metrics}
             avg_scores_b = {m: {"score": avg_b[m]} for m in metrics}
 
@@ -698,8 +785,8 @@ elif page == ":material/bar_chart: Evaluation Harness":
 
             st.markdown(render_ornament(), unsafe_allow_html=True)
 
-            # Per-question Results Table
-            st.markdown("### 📋 Per-Question Results")
+            # ── Per-Question Results Table ─────────────────────────
+            st.markdown(render_section_header("Per-Question Results", "fact_check"), unsafe_allow_html=True)
 
             table_data = []
             for i in range(len(results_a)):
@@ -879,17 +966,18 @@ elif page == ":material/bar_chart: Evaluation Harness":
 
 elif page == ":material/show_chart: Search Analytics":
     st.markdown("# :material/show_chart: Royal Intelligence Report")
-    st.markdown("*Track the performance of the Mahishmati Archives*")
+    st.markdown('<p class="page-subtitle">Track performance of the Mahishmati Archives over time</p>', unsafe_allow_html=True)
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     analytics = get_analytics()
 
-    # Top-level KPIs
+    # ── Top-level KPIs ────────────────────────────────────────────
+    st.markdown(render_section_header("Key Performance Indicators", "pin"), unsafe_allow_html=True)
     kpi_cols = st.columns(4)
     with kpi_cols[0]:
         st.metric("Total Queries", analytics["total_queries"])
     with kpi_cols[1]:
-        st.metric("Avg Response Time", f"{analytics['avg_response_time_ms']:.0f}ms")
+        st.metric("Avg Response Time", f"{analytics['avg_response_time_ms']:.0f} ms")
     with kpi_cols[2]:
         st.metric("Avg Faithfulness", f"{analytics['avg_faithfulness']:.3f}")
     with kpi_cols[3]:
@@ -900,9 +988,9 @@ elif page == ":material/show_chart: Search Analytics":
     if analytics["total_queries"] > 0:
         chart_cols = st.columns(2)
 
-        # Category Distribution (Donut Chart)
+        # ── Category Distribution (Donut Chart) ──────────────────
         with chart_cols[0]:
-            st.markdown("### :material/bar_chart: Query Category Distribution")
+            st.markdown(render_section_header("Category Distribution", "donut_large"), unsafe_allow_html=True)
             if analytics["category_distribution"]:
                 cat_data = analytics["category_distribution"]
                 fig_cat = go.Figure(data=[go.Pie(
@@ -924,9 +1012,9 @@ elif page == ":material/show_chart: Search Analytics":
                 )
                 st.plotly_chart(fig_cat, use_container_width=True)
 
-        # Response Time Over Queries (Line Chart)
+        # ── Response Time Trend ───────────────────────────────────
         with chart_cols[1]:
-            st.markdown("### :material/timer: Response Time Trend")
+            st.markdown(render_section_header("Response Time Trend", "timer"), unsafe_allow_html=True)
             if analytics["response_times"]:
                 fig_time = go.Figure()
                 fig_time.add_trace(go.Scatter(
@@ -950,18 +1038,19 @@ elif page == ":material/show_chart: Search Analytics":
 
         st.markdown(render_ornament(), unsafe_allow_html=True)
 
-        # Most Asked Questions
-        st.markdown("### 🔥 Most Asked Questions")
+        # ── Most Asked Questions ──────────────────────────────────
+        st.markdown(render_section_header("Most Asked Questions", "local_fire_department"), unsafe_allow_html=True)
         if analytics["top_queries"]:
             for i, tq in enumerate(analytics["top_queries"][:8]):
-                st.markdown(f"**{i+1}.** {tq['query']} — asked **{tq['count']}** time(s)")
+                rank_label = ["1st", "2nd", "3rd"][i] if i < 3 else f"{i+1}th"
+                st.markdown(f"**{rank_label}.** {tq['query']} — asked **{tq['count']}** time(s)")
 
         st.markdown(render_ornament(), unsafe_allow_html=True)
 
-        # Faithfulness & Retrieval Over Time
+        # ── Score Trends ──────────────────────────────────────────
         score_cols = st.columns(2)
         with score_cols[0]:
-            st.markdown("### 📏 Faithfulness Trend")
+            st.markdown(render_section_header("Faithfulness Trend", "trending_up"), unsafe_allow_html=True)
             if analytics["faithfulness_over_time"]:
                 fig_faith = go.Figure()
                 fig_faith.add_trace(go.Scatter(
@@ -983,7 +1072,7 @@ elif page == ":material/show_chart: Search Analytics":
                 st.plotly_chart(fig_faith, use_container_width=True)
 
         with score_cols[1]:
-            st.markdown("### 📏 Retrieval Score Trend")
+            st.markdown(render_section_header("Retrieval Score Trend", "analytics"), unsafe_allow_html=True)
             if analytics["retrieval_over_time"]:
                 fig_ret = go.Figure()
                 fig_ret.add_trace(go.Scatter(
@@ -1004,10 +1093,11 @@ elif page == ":material/show_chart: Search Analytics":
                 )
                 st.plotly_chart(fig_ret, use_container_width=True)
 
-        # Clear analytics button
-        if st.button("🗑️ Clear Analytics Data"):
+        # ── Clear Data Button ─────────────────────────────────────
+        st.markdown("")
+        if st.button(":material/delete: Clear Analytics Data", type="secondary"):
             clear_analytics()
-            st.success("Analytics cleared!")
+            st.success("Analytics cleared successfully!")
             st.rerun()
 
     else:
@@ -1020,7 +1110,7 @@ elif page == ":material/show_chart: Search Analytics":
 
 elif page == ":material/hub: Character Map":
     st.markdown("# :material/hub: Mahishmati Dynasty Map")
-    st.markdown("*Interactive 3D character relationship graph*")
+    st.markdown('<p class="page-subtitle">Interactive 3D character relationship graph</p>', unsafe_allow_html=True)
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     from src.character_graph import create_3d_graph, CHARACTERS
@@ -1031,8 +1121,8 @@ elif page == ":material/hub: Character Map":
 
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # Character Cards
-    st.markdown("### 👥 Character Profiles")
+    # ── Character Cards ────────────────────────────────────────────
+    st.markdown(render_section_header("Character Profiles", "groups"), unsafe_allow_html=True)
 
     char_cols = st.columns(3)
     for i, (name, data) in enumerate(CHARACTERS.items()):
