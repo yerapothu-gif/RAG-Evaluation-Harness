@@ -28,14 +28,14 @@ print(f"  [OK] Setting B Chunks (350/70):   {len(chunks_b)} chunks")
 print("\n[2/7] Testing Vector Database (ChromaDB) & Embeddings...")
 from src.vector_store import build_index, query_collection
 chunks_a_idx, chunks_b_idx = build_index()
-results_a = query_collection(SETTING_A["collection_name"], "Why did Kattappa kill Baahubali?", top_k=3)
+results_a = query_collection(SETTING_A["collection_name"], "Why did Kattappa kill Baahubali?", top_k=5)
 print(f"  [OK] Dense Retrieval (Setting A): {len(results_a)} chunks returned. Top similarity: {results_a[0]['similarity']}")
 
 # 3. Hybrid BM25 & RRF Retrieval
 print("\n[3/7] Testing Hybrid Retrieval (BM25 + Dense + RRF)...")
 from src.hybrid_retriever import build_bm25_index, hybrid_search
 build_bm25_index(chunks_b_idx)
-results_b = hybrid_search("Why did Kattappa kill Baahubali?", top_k=3)
+results_b = hybrid_search("Why did Kattappa kill Baahubali?", top_k=5)
 print(f"  [OK] Hybrid Retrieval (Setting B): {len(results_b)} chunks returned. Top RRF score: {results_b[0]['rrf_score']}")
 
 # 4. Guardrails & Classifier

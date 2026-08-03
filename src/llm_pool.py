@@ -233,6 +233,7 @@ def call_llm_raw(
     prompt: str,
     max_tokens: int = 512,
     temperature: float = 0.0,
+    custom_api_key: Optional[str] = None,
 ) -> str:
     """
     Raw single-turn LLM call across the provider pool.
@@ -241,7 +242,7 @@ def call_llm_raw(
     """
     messages = [{"role": "user", "content": prompt}]
     try:
-        text, _ = _pool_call(messages, max_tokens=max_tokens, temperature=temperature)
+        text, _ = _pool_call(messages, max_tokens=max_tokens, temperature=temperature, custom_api_key=custom_api_key)
         return text
     except Exception as e:
         return json.dumps({"error": str(e)})

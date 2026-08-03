@@ -15,7 +15,7 @@ def reciprocal_rank_fusion(
     dense_results: List[Dict],
     bm25_results: List[Dict],
     k: int = RRF_K,
-    top_k: int = 3,
+    top_k: int = 5,
 ) -> List[Dict]:
     """
     Merge dense and BM25 results via Reciprocal Rank Fusion.

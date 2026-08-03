@@ -100,7 +100,7 @@ def build_collection(
 def query_collection(
     collection_name: str,
     query_text: str,
-    top_k: int = 3,
+    top_k: int = 5,
 ) -> List[Dict]:
     """
     Query a ChromaDB collection and return ranked results.

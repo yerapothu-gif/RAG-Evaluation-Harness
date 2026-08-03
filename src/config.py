@@ -49,7 +49,7 @@ RRF_K = 60  # Reciprocal Rank Fusion constant
 
 # --- Paths ---
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-KNOWLEDGE_BASE_PATH = os.path.join(DATA_DIR, "baahubali_knowledge_base.txt")
+KNOWLEDGE_BASE_PATH = os.path.join(DATA_DIR, "baahubali_knowledge_base.pdf")
 TEST_SET_PATH = os.path.join(DATA_DIR, "test_set.json")
 ANALYTICS_LOG_PATH = os.path.join(DATA_DIR, "analytics_log.json")
 CHROMA_DB_DIR = os.path.join(DATA_DIR, "chroma_db")

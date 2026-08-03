@@ -30,8 +30,8 @@ print("\nVERIFICATION - quick query test...")
 from backend.vectordb.chroma_store import query_collection
 from backend.vectordb.bm25_store import query_bm25
 
-results_a = query_collection(SETTING_A["collection_name"], "Who is Kattappa?", top_k=3)
-results_b = query_bm25("Who is Kattappa?", top_k=3)
+results_a = query_collection(SETTING_A["collection_name"], "Who is Kattappa?", top_k=5)
+results_b = query_bm25("Who is Kattappa?", top_k=5)
 print(f"  Dense (A) top result similarity: {results_a[0]['similarity'] if results_a else 'N/A'}")
 print(f"  BM25  (B) top result score:      {results_b[0]['bm25_score'] if results_b else 'N/A'}")
 print("\nINDEX BUILD COMPLETE")

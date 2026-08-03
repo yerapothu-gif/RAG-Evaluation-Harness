@@ -57,7 +57,7 @@ LOGS_DIR = _ROOT / "logs"
 EVAL_DIR = _ROOT / "evaluation"
 BACKEND_DIR = _ROOT / "backend"
 
-KNOWLEDGE_BASE_PATH = DATA_DIR / "baahubali_knowledge_base.txt"
+KNOWLEDGE_BASE_PATH = DATA_DIR / "baahubali_knowledge_base.pdf"
 TEST_SET_PATH = BACKEND_DIR / "evaluation" / "test_set.json"
 BM25_INDEX_PATH = DATA_DIR / "bm25_index.pkl"
 CHROMA_DB_DIR = str(DATA_DIR / "chroma_db")

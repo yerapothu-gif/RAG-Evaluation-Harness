@@ -182,6 +182,9 @@ with st.sidebar:
         if custom_key_val:
             st.session_state.custom_api_key = custom_key_val.strip()
 
+        enable_expansion = st.checkbox("🧠 Enable AI Query Expansion", value=True, help="Use the LLM to rewrite and optimize your query for better retrieval.")
+        st.session_state.enable_query_expansion = enable_expansion
+
         st.markdown(f"""
         **Setting A** — Dense Vector
         - Chunk size: {SETTING_A['chunk_size']}
@@ -330,6 +333,19 @@ if page == "⚔️ Query Engine":
         if not st.session_state.index_built:
             st.error("⏳ Archives are still being built. Please wait...")
         else:
+            custom_key = st.session_state.get("custom_api_key")
+
+            # Step 0: Query Normalization (Spell Check)
+            from src.query_understanding import correct_spelling
+            
+            normalized_query = active_query
+            with st.spinner("✍️ Checking spelling..."):
+                normalized_query = correct_spelling(active_query, custom_api_key=custom_key)
+                
+            if normalized_query.lower() != active_query.lower():
+                st.info(f"Showing results for: **{normalized_query}**  \n*(Search instead for: {active_query})*")
+                active_query = normalized_query
+
             # Step 1: Guardrail Check
             in_scope, scope_msg, scope_confidence = is_in_scope(active_query)
 
@@ -351,10 +367,20 @@ if page == "⚔️ Query Engine":
                 st.warning(scope_msg)
                 log_query(active_query, "out_of_scope", "N/A", 0, is_in_scope=False)
             else:
-                # Step 3: Run dual retrieval
-                custom_key = st.session_state.get("custom_api_key")
+                
+                # Step 3: Query Expansion
+                search_query = active_query
+                if st.session_state.get("enable_query_expansion", False):
+                    from src.query_understanding import expand_query
+                    with st.spinner("🧠 Optimizing search query..."):
+                        search_query = expand_query(active_query, custom_api_key=custom_key)
+                    
+                    if search_query != active_query:
+                        st.info(f"**Original:** {active_query}\n\n**Expanded Search:** {search_query}")
+
+                # Step 4: Run dual retrieval
                 with st.spinner("⚔️ Consulting the Royal Archives..."):
-                    results = run_query(active_query, "both", custom_api_key=custom_key)
+                    results = run_query(search_query, "both", custom_api_key=custom_key)
 
                 # Display side-by-side results
                 col_a, col_b = st.columns(2)
@@ -577,6 +603,56 @@ elif page == "📊 Evaluation Harness":
             st.session_state.eval_results_a = results_a_list
             st.session_state.eval_results_b = results_b_list
 
+            # ── Persist run to eval_runs.jsonl ──────────────────────────────
+            import uuid as _uuid, json as _json
+            from pathlib import Path as _Path
+
+            def _avg(lst, metric):
+                s = [r["scores"].get(metric, {}).get("score", 0)
+                     for r in lst if not r.get("is_oos")]
+                return round(sum(s) / len(s), 4) if s else 0.0
+
+            _metrics = ["faithfulness", "answer_relevance",
+                        "context_recall", "context_precision"]
+
+            _run_record = {
+                "type": "full_eval_run",
+                "run_id": str(_uuid.uuid4())[:8],
+                "timestamp": __import__('time').strftime("%Y-%m-%dT%H:%M:%SZ",
+                                                          __import__('time').gmtime()),
+                "num_questions": num_eval,
+                "aggregate": {
+                    "A": {m: _avg(results_a_list, m) for m in _metrics},
+                    "B": {m: _avg(results_b_list, m) for m in _metrics},
+                },
+                "per_question": [
+                    {
+                        "q": results_a_list[_i]["question"],
+                        "type": results_a_list[_i].get("type", ""),
+                        "is_oos": results_a_list[_i].get("is_oos", False),
+                        "answer_a": results_a_list[_i].get("answer", ""),
+                        "answer_b": (results_b_list[_i].get("answer", "")
+                                     if _i < len(results_b_list) else ""),
+                        "scores_a": {
+                            m: results_a_list[_i]["scores"].get(m, {}).get("score", 0)
+                            for m in _metrics
+                        },
+                        "scores_b": {
+                            m: (results_b_list[_i]["scores"].get(m, {}).get("score", 0)
+                                if _i < len(results_b_list) else 0)
+                            for m in _metrics
+                        },
+                    }
+                    for _i in range(len(results_a_list))
+                ],
+            }
+
+            _log_path = _Path("logs/eval_runs.jsonl")
+            _log_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(_log_path, "a", encoding="utf-8") as _f:
+                _f.write(_json.dumps(_run_record, ensure_ascii=False) + "\n")
+            st.toast("💾 Run saved to evaluation history", icon="📜")
+
     # Display results if available
     if st.session_state.eval_results_a and st.session_state.eval_results_b:
         results_a = st.session_state.eval_results_a
@@ -657,6 +733,139 @@ elif page == "📊 Evaluation Harness":
                 else:
                     st.markdown(f"Out-of-scope — Guardrail {'✅ Correct' if ra.get('oos_correct') else '❌ Missed'}")
                 st.markdown("---")
+
+    # ── Evaluation History ───────────────────────────────────────────────────
+    st.markdown(render_ornament(), unsafe_allow_html=True)
+    st.markdown("### 📜 Evaluation History")
+    st.markdown("*All past evaluation runs stored in `logs/eval_runs.jsonl`*")
+
+    import json as _json_h
+    from pathlib import Path as _Path_h
+
+    _hist_path = _Path_h("logs/eval_runs.jsonl")
+    _history_runs = []
+    if _hist_path.exists():
+        with open(_hist_path, "r", encoding="utf-8") as _hf:
+            for _line in _hf:
+                _line = _line.strip()
+                if not _line:
+                    continue
+                try:
+                    _rec = _json_h.loads(_line)
+                    if _rec.get("type") == "full_eval_run":
+                        _history_runs.append(_rec)
+                except Exception:
+                    pass
+
+    if not _history_runs:
+        st.info("📭 No evaluation history yet. Run an evaluation to start building your history!")
+    else:
+        _history_runs_sorted = list(reversed(_history_runs))  # newest first
+        st.markdown(f"**{len(_history_runs_sorted)} run(s) recorded**")
+
+        # Summary table across all runs
+        _summary_rows = []
+        for _r in _history_runs_sorted:
+            _agg = _r.get("aggregate", {})
+            _agg_a = _agg.get("A", {})
+            _agg_b = _agg.get("B", {})
+            _avg_a = round(sum(_agg_a.values()) / max(len(_agg_a), 1), 3) if _agg_a else 0
+            _avg_b = round(sum(_agg_b.values()) / max(len(_agg_b), 1), 3) if _agg_b else 0
+            _summary_rows.append({
+                "Run ID":    _r.get("run_id", "—"),
+                "Timestamp": _r.get("timestamp", "—"),
+                "Questions": _r.get("num_questions", "—"),
+                "Avg A":     f"{_avg_a:.3f}",
+                "Avg B":     f"{_avg_b:.3f}",
+                "Faith. A":  f"{_agg_a.get('faithfulness', 0):.3f}",
+                "Faith. B":  f"{_agg_b.get('faithfulness', 0):.3f}",
+                "Rel. A":    f"{_agg_a.get('answer_relevance', 0):.3f}",
+                "Rel. B":    f"{_agg_b.get('answer_relevance', 0):.3f}",
+                "Recall A":  f"{_agg_a.get('context_recall', 0):.3f}",
+                "Recall B":  f"{_agg_b.get('context_recall', 0):.3f}",
+            })
+
+        _df_hist = pd.DataFrame(_summary_rows)
+        st.dataframe(_df_hist, use_container_width=True, hide_index=True)
+
+        # Score trend chart (only when > 1 run)
+        if len(_history_runs_sorted) > 1:
+            st.markdown("#### 📈 Score Trend Across Runs")
+            _run_labels = [_r.get("run_id", str(_ii))
+                           for _ii, _r in enumerate(reversed(_history_runs_sorted))]
+            _trend_a = [
+                round(sum(_r["aggregate"].get("A", {}).values()) /
+                      max(len(_r["aggregate"].get("A", {"x": 1})), 1), 3)
+                for _r in reversed(_history_runs_sorted)
+            ]
+            _trend_b = [
+                round(sum(_r["aggregate"].get("B", {}).values()) /
+                      max(len(_r["aggregate"].get("B", {"x": 1})), 1), 3)
+                for _r in reversed(_history_runs_sorted)
+            ]
+            _fig_trend = go.Figure()
+            _fig_trend.add_trace(go.Scatter(
+                x=_run_labels, y=_trend_a, mode="lines+markers",
+                name="Setting A", line=dict(color=ROYAL_GOLD, width=2),
+                marker=dict(size=8, color=ROYAL_GOLD),
+            ))
+            _fig_trend.add_trace(go.Scatter(
+                x=_run_labels, y=_trend_b, mode="lines+markers",
+                name="Setting B", line=dict(color=EMBER_ORANGE, width=2),
+                marker=dict(size=8, color=EMBER_ORANGE),
+            ))
+            _fig_trend.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                xaxis=dict(title="Run ID", color=WARM_CREAM,
+                           gridcolor="rgba(212,175,55,0.1)"),
+                yaxis=dict(title="Avg Score", range=[0, 1], color=WARM_CREAM,
+                           gridcolor="rgba(212,175,55,0.1)"),
+                legend=dict(font=dict(color=WARM_CREAM),
+                            bgcolor="rgba(26,18,13,0.8)",
+                            bordercolor="rgba(212,175,55,0.2)", borderwidth=1),
+                height=280, margin=dict(l=40, r=20, t=10, b=40),
+            )
+            st.plotly_chart(_fig_trend, use_container_width=True)
+
+        # Per-run expandable detail
+        st.markdown("#### 🔍 Per-Run Details")
+        for _idx_r, _run in enumerate(_history_runs_sorted):
+            _label = (
+                f"Run {_run.get('run_id', _idx_r)}  ·  "
+                f"{_run.get('timestamp', '?')}  ·  "
+                f"{_run.get('num_questions', '?')} questions"
+            )
+            with st.expander(_label):
+                _agg = _run.get("aggregate", {})
+                _col_a2, _col_b2 = st.columns(2)
+                with _col_a2:
+                    st.markdown("**Setting A Averages**")
+                    for _mk, _mv in _agg.get("A", {}).items():
+                        st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
+                with _col_b2:
+                    st.markdown("**Setting B Averages**")
+                    for _mk, _mv in _agg.get("B", {}).items():
+                        st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
+                st.markdown("---")
+                _pq_data = []
+                for _pq in _run.get("per_question", []):
+                    _sa = _pq.get("scores_a", {})
+                    _sb = _pq.get("scores_b", {})
+                    _pq_data.append({
+                        "Question": _pq["q"][:70] + "..." if len(_pq["q"]) > 70 else _pq["q"],
+                        "Type": _pq.get("type", ""),
+                        "OOS": "✅" if _pq.get("is_oos") else "",
+                        "Faith A": f"{_sa.get('faithfulness', 0):.2f}",
+                        "Faith B": f"{_sb.get('faithfulness', 0):.2f}",
+                        "Rel A":   f"{_sa.get('answer_relevance', 0):.2f}",
+                        "Rel B":   f"{_sb.get('answer_relevance', 0):.2f}",
+                        "Avg A":   f"{round(sum(_sa.values()) / max(len(_sa), 1), 2):.2f}",
+                        "Avg B":   f"{round(sum(_sb.values()) / max(len(_sb), 1), 2):.2f}",
+                    })
+                if _pq_data:
+                    st.dataframe(pd.DataFrame(_pq_data),
+                                 use_container_width=True, hide_index=True)
 
 
 # ═══════════════════════════════════════════
