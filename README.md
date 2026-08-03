@@ -95,6 +95,4 @@ The application will launch in your default web browser. On the first run, the s
 
 Navigate through the sidebar to explore the Query Engine, Evaluation Harness, Search Analytics, and Character Map.
 
-## 📝 License
 
-This project is open-source and available under the [MIT License](LICENSE).
