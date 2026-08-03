@@ -107,8 +107,10 @@ def build_prompt(
 INSTRUCTIONS:
 1. Provide a strictly grounded answer based ONLY on the context above.
 2. DO NOT start with 'Based on the context' or 'The documents state'.
-3. DO NOT explain what the documents lack.
-4. If the exact answer is not present, reply EXACTLY with: 'I couldn't find any relevant information in the provided knowledge base.'
+3. DO NOT explain what the documents lack. 
+4. If the user asks a multi-part question, ONLY answer the parts supported by the context. Silently ignore the rest.
+5. NEVER use the phrases 'not available', 'no information', 'not mentioned', or 'I cannot answer' (except for the exact fallback phrase below).
+6. If the exact answer to the ENTIRE question is not present, reply EXACTLY with: 'I couldn't find any relevant information in the provided knowledge base.'
 
 === YOUR ANSWER (Strictly Grounded) ===
 """
@@ -140,7 +142,9 @@ def build_chat_messages(
                 f"1. Provide a strictly grounded answer based ONLY on the context above.\n"
                 f"2. DO NOT start with 'Based on the context' or 'The documents state'.\n"
                 f"3. DO NOT explain what the documents lack.\n"
-                f"4. If the exact answer is not present, reply EXACTLY with: 'I couldn't find any relevant information in the provided knowledge base.'"
+                f"4. If the user asks a multi-part question, ONLY answer the parts supported by the context. Silently ignore the rest.\n"
+                f"5. NEVER use the phrases 'not available', 'no information', 'not mentioned', or 'I cannot answer' (except for the exact fallback phrase below).\n"
+                f"6. If the exact answer to the ENTIRE question is not present, reply EXACTLY with: 'I couldn't find any relevant information in the provided knowledge base.'"
             ),
         },
     ]

@@ -801,5 +801,27 @@
     "retrieval_score": null,
     "is_in_scope": true,
     "answer_preview": "Based on the provided archives, information about Kattappa's motive for killing Devasena is not available. However, it is mentioned that Kattappa killed Baahubali, not Devasena. Devasena is mentioned "
+  },
+  {
+    "timestamp": "2026-08-03T23:56:28.702009",
+    "query": "Describe the Kingdom of Mahishmati",
+    "category": "Kingdom",
+    "setting": "A",
+    "response_time_ms": 2681.3,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, the following information is available about the Kingdom of Mahishmati:\n\n1. Mahishmati is described as \"the mighty fictional kingdom at the centre of the saga.\"\n2. The "
+  },
+  {
+    "timestamp": "2026-08-03T23:56:28.735813",
+    "query": "Describe the Kingdom of Mahishmati",
+    "category": "Kingdom",
+    "setting": "B",
+    "response_time_ms": 2694.9,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": true,
+    "answer_preview": "Based on the provided archives, the following information is available about the Kingdom of Mahishmati:\n\n1. Description: Mahishmati is described as \"The mighty fictional kingdom at the centre of the s"
   }
 ]
