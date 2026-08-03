@@ -647,5 +647,49 @@
     "retrieval_score": null,
     "is_in_scope": false,
     "answer_preview": ""
+  },
+  {
+    "timestamp": "2026-08-03T11:48:07.468529",
+    "query": "who is katapa",
+    "category": "out_of_scope",
+    "setting": "N/A",
+    "response_time_ms": 0,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": false,
+    "answer_preview": ""
+  },
+  {
+    "timestamp": "2026-08-03T11:48:09.930182",
+    "query": "who is katapa",
+    "category": "out_of_scope",
+    "setting": "N/A",
+    "response_time_ms": 0,
+    "faithfulness_score": null,
+    "retrieval_score": null,
+    "is_in_scope": false,
+    "answer_preview": ""
+  },
+  {
+    "timestamp": "2026-08-03T11:49:57.698149",
+    "query": "Who is Amarendra Baahubali and what is his claim to the throne of Mahishmati?",
+    "category": "Character",
+    "setting": "A",
+    "response_time_ms": 500.0,
+    "faithfulness_score": 1.0,
+    "retrieval_score": 0.75,
+    "is_in_scope": true,
+    "answer_preview": "Amarendra Baahubali is the noble, courageous, and beloved prince of Mahishmati. He is chosen by Sivagami to be king, indicating his claim to the throne. As stated, Sivagami \"names Amarendra as the fut"
+  },
+  {
+    "timestamp": "2026-08-03T11:49:57.725106",
+    "query": "Who is Amarendra Baahubali and what is his claim to the throne of Mahishmati?",
+    "category": "Character",
+    "setting": "B",
+    "response_time_ms": 500.0,
+    "faithfulness_score": 1.0,
+    "retrieval_score": 0.7875,
+    "is_in_scope": true,
+    "answer_preview": "Amarendra Baahubali is the noble, courageous, and beloved prince of Mahishmati. He is a natural leader chosen by Sivagami to be king. His claim to the throne is based on Sivagami's choice of him as th"
   }
 ]

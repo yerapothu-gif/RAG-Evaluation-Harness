@@ -442,435 +442,440 @@ elif page == "📊 Evaluation Harness":
     st.markdown("*Measure the worthiness of each retrieval strategy*")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    # Load test set
-    from src.test_set_generator import load_test_set, generate_test_set, save_test_set
+    tab_run, tab_history = st.tabs(["🚀 Run Evaluation", "📜 Evaluation History"])
 
-    test_set = load_test_set()
+    with tab_run:
+        # Load test set
+        from src.test_set_generator import load_test_set, generate_test_set, save_test_set
 
-    col_info, col_actions = st.columns([2, 1])
-    with col_info:
-        st.markdown(f"**Test Set:** {len(test_set)} questions loaded")
-        type_counts = {}
-        for q in test_set:
-            if isinstance(q, dict):
-                t = q.get("type", "unknown")
-                type_counts[t] = type_counts.get(t, 0) + 1
-        st.markdown(f"Distribution: {', '.join(f'{t}: {c}' for t, c in type_counts.items())}")
+        test_set = load_test_set()
 
-    with col_actions:
-        if st.button("🔄 Re-generate Test Set (LLM)", use_container_width=True):
-            if has_groq or has_gemini or has_grok or has_custom:
-                with st.spinner("Generating test set with LLM-as-Teacher..."):
-                    new_set = generate_test_set(20)
-                    if new_set:
-                        save_test_set(new_set)
-                        st.success(f"Generated {len(new_set)} questions!")
-                        st.rerun()
+        col_info, col_actions = st.columns([2, 1])
+        with col_info:
+            st.markdown(f"**Test Set:** {len(test_set)} questions loaded")
+            type_counts = {}
+            for q in test_set:
+                if isinstance(q, dict):
+                    t = q.get("type", "unknown")
+                    type_counts[t] = type_counts.get(t, 0) + 1
+            st.markdown(f"Distribution: {', '.join(f'{t}: {c}' for t, c in type_counts.items())}")
+
+        with col_actions:
+            if st.button("🔄 Re-generate Test Set (LLM)", use_container_width=True):
+                if has_groq or has_gemini or has_grok or has_custom:
+                    with st.spinner("Generating test set with LLM-as-Teacher..."):
+                        new_set = generate_test_set(20)
+                        if new_set:
+                            save_test_set(new_set)
+                            st.success(f"Generated {len(new_set)} questions!")
+                            st.rerun()
+                else:
+                    st.error("Configure GROQ_API_KEY, GEMINI_API_KEY, or XAI_API_KEY to generate.")
+
+        st.markdown(render_ornament(), unsafe_allow_html=True)
+
+        # Select how many to evaluate
+        num_eval = st.slider("Questions to evaluate", 1, len(test_set), min(5, len(test_set)))
+
+        if st.button("⚔️ Run Full Evaluation", type="primary", use_container_width=True):
+            if not st.session_state.index_built:
+                st.error("⏳ Archives are still being built. Please wait...")
             else:
-                st.error("Configure GROQ_API_KEY, GEMINI_API_KEY, or XAI_API_KEY to generate.")
+                from src.evaluator import run_full_evaluation
+                from src.vector_store import query_collection
+                from src.hybrid_retriever import hybrid_search
+                from src.llm_engine import generate_answer
 
-    st.markdown(render_ornament(), unsafe_allow_html=True)
+                eval_subset = test_set[:num_eval]
+                results_a_list = []
+                results_b_list = []
+                custom_key = st.session_state.get("custom_api_key")
 
-    # Select how many to evaluate
-    num_eval = st.slider("Questions to evaluate", 1, len(test_set), min(5, len(test_set)))
+                progress_bar = st.progress(0)
+                status_text = st.empty()
 
-    if st.button("⚔️ Run Full Evaluation", type="primary", use_container_width=True):
-        if not st.session_state.index_built:
-            st.error("⏳ Archives are still being built. Please wait...")
-        else:
-            from src.evaluator import run_full_evaluation
-            from src.vector_store import query_collection
-            from src.hybrid_retriever import hybrid_search
-            from src.llm_engine import generate_answer
+                for idx, item in enumerate(eval_subset):
+                    q = item["question"]
+                    gt = item["ground_truth"]
+                    is_oos = item.get("category") == "out_of_scope"
 
-            eval_subset = test_set[:num_eval]
-            results_a_list = []
-            results_b_list = []
-            custom_key = st.session_state.get("custom_api_key")
+                    status_text.markdown(f"**Evaluating [{idx+1}/{num_eval}]:** {q[:80]}...")
+                    progress_bar.progress((idx + 1) / num_eval)
 
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            for idx, item in enumerate(eval_subset):
-                q = item["question"]
-                gt = item["ground_truth"]
-                is_oos = item.get("category") == "out_of_scope"
-
-                status_text.markdown(f"**Evaluating [{idx+1}/{num_eval}]:** {q[:80]}...")
-                progress_bar.progress((idx + 1) / num_eval)
-
-                if is_oos:
-                    # For out-of-scope, just check guardrail
-                    in_scope_check, _, _ = is_in_scope(q)
-                    oos_score = 1.0 if not in_scope_check else 0.0
-                    results_a_list.append({
-                        "question": q,
-                        "type": item.get("type", ""),
-                        "is_oos": True,
-                        "oos_correct": not in_scope_check,
-                        "scores": {
-                            "faithfulness": {"score": oos_score},
-                            "answer_relevance": {"score": oos_score},
-                            "context_recall": {"score": oos_score},
-                            "context_precision": {"score": oos_score},
-                            "avg_score": oos_score,
-                        },
-                    })
-                    results_b_list.append(results_a_list[-1].copy())
-                    continue
-
-                try:
-                    # Setting A
-                    chunks_a = query_collection(SETTING_A["collection_name"], q, SETTING_A["top_k"])
-                    answer_a = generate_answer(q, chunks_a, custom_api_key=custom_key)
-                    eval_a = run_full_evaluation(q, answer_a["answer"], chunks_a, gt, custom_api_key=custom_key)
-                    results_a_list.append({
-                        "question": q,
-                        "type": item.get("type", ""),
-                        "answer": answer_a["answer"],
-                        "scores": eval_a,
-                        "is_oos": False,
-                    })
-
-                    # Setting B
-                    chunks_b = hybrid_search(q, SETTING_B["top_k"])
-                    answer_b = generate_answer(q, chunks_b, custom_api_key=custom_key)
-                    eval_b = run_full_evaluation(q, answer_b["answer"], chunks_b, gt, custom_api_key=custom_key)
-                    results_b_list.append({
-                        "question": q,
-                        "type": item.get("type", ""),
-                        "answer": answer_b["answer"],
-                        "scores": eval_b,
-                        "is_oos": False,
-                    })
-                    # Log to Analytics & DB
-                    cat = item.get("category", "General")
-                    log_query(
-                        q, cat, "A", 0.5,
-                        faithfulness_score=eval_a["faithfulness"]["score"],
-                        retrieval_score=eval_a["avg_score"],
-                        is_in_scope=True,
-                        answer_preview=answer_a["answer"],
-                    )
-                    log_query(
-                        q, cat, "B", 0.5,
-                        faithfulness_score=eval_b["faithfulness"]["score"],
-                        retrieval_score=eval_b["avg_score"],
-                        is_in_scope=True,
-                        answer_preview=answer_b["answer"],
-                    )
+                    if is_oos:
+                        # For out-of-scope, just check guardrail
+                        in_scope_check, _, _ = is_in_scope(q)
+                        oos_score = 1.0 if not in_scope_check else 0.0
+                        results_a_list.append({
+                            "question": q,
+                            "type": item.get("type", ""),
+                            "is_oos": True,
+                            "oos_correct": not in_scope_check,
+                            "scores": {
+                                "faithfulness": {"score": oos_score},
+                                "answer_relevance": {"score": oos_score},
+                                "context_recall": {"score": oos_score},
+                                "context_precision": {"score": oos_score},
+                                "avg_score": oos_score,
+                            },
+                        })
+                        results_b_list.append(results_a_list[-1].copy())
+                        continue
 
                     try:
-                        from backend.eval_logging.eval_store import insert_eval_result
-                        import uuid
-                        exp_id = st.session_state.get("current_exp_id", str(uuid.uuid4()))
-                        st.session_state.current_exp_id = exp_id
-                        insert_eval_result(exp_id, q, answer_a["answer"], {
-                            "setting": "A",
-                            "faithfulness": eval_a["faithfulness"]["score"],
-                            "answer_relevancy": eval_a["answer_relevance"]["score"],
-                            "context_recall": eval_a["context_recall"]["score"],
-                            "context_precision": eval_a["context_precision"]["score"],
-                            "hit_at_k": 1.0, "mrr": 1.0,
-                            "latency_retrieval_ms": 100.0, "latency_generation_ms": 400.0,
-                            "llm_judge_score": eval_a["avg_score"],
-                            "query_type": item.get("type", "factual"),
-                            "eval_status": "success",
-                        }, SETTING_A, query_id=f"q_{idx+1}")
-                        insert_eval_result(exp_id, q, answer_b["answer"], {
-                            "setting": "B",
-                            "faithfulness": eval_b["faithfulness"]["score"],
-                            "answer_relevancy": eval_b["answer_relevance"]["score"],
-                            "context_recall": eval_b["context_recall"]["score"],
-                            "context_precision": eval_b["context_precision"]["score"],
-                            "hit_at_k": 1.0, "mrr": 1.0,
-                            "latency_retrieval_ms": 120.0, "latency_generation_ms": 400.0,
-                            "llm_judge_score": eval_b["avg_score"],
-                            "query_type": item.get("type", "factual"),
-                            "eval_status": "success",
-                        }, SETTING_B, query_id=f"q_{idx+1}")
-                    except Exception:
-                        pass
+                        # Setting A
+                        chunks_a = query_collection(SETTING_A["collection_name"], q, SETTING_A["top_k"])
+                        answer_a = generate_answer(q, chunks_a, custom_api_key=custom_key)
+                        eval_a = run_full_evaluation(q, answer_a["answer"], chunks_a, gt, custom_api_key=custom_key)
+                        results_a_list.append({
+                            "question": q,
+                            "type": item.get("type", ""),
+                            "answer": answer_a["answer"],
+                            "scores": eval_a,
+                            "is_oos": False,
+                        })
 
-                except Exception as e:
-                    st.warning(f"Error evaluating question {idx+1}: {e}")
-                    continue
+                        # Setting B
+                        chunks_b = hybrid_search(q, SETTING_B["top_k"])
+                        answer_b = generate_answer(q, chunks_b, custom_api_key=custom_key)
+                        eval_b = run_full_evaluation(q, answer_b["answer"], chunks_b, gt, custom_api_key=custom_key)
+                        results_b_list.append({
+                            "question": q,
+                            "type": item.get("type", ""),
+                            "answer": answer_b["answer"],
+                            "scores": eval_b,
+                            "is_oos": False,
+                        })
+                        # Log to Analytics & DB
+                        cat = item.get("category", "General")
+                        log_query(
+                            q, cat, "A", 0.5,
+                            faithfulness_score=eval_a["faithfulness"]["score"],
+                            retrieval_score=eval_a["avg_score"],
+                            is_in_scope=True,
+                            answer_preview=answer_a["answer"],
+                        )
+                        log_query(
+                            q, cat, "B", 0.5,
+                            faithfulness_score=eval_b["faithfulness"]["score"],
+                            retrieval_score=eval_b["avg_score"],
+                            is_in_scope=True,
+                            answer_preview=answer_b["answer"],
+                        )
+
+                        try:
+                            from backend.eval_logging.eval_store import insert_eval_result
+                            import uuid
+                            exp_id = st.session_state.get("current_exp_id", str(uuid.uuid4()))
+                            st.session_state.current_exp_id = exp_id
+                            insert_eval_result(exp_id, q, answer_a["answer"], {
+                                "setting": "A",
+                                "faithfulness": eval_a["faithfulness"]["score"],
+                                "answer_relevancy": eval_a["answer_relevance"]["score"],
+                                "context_recall": eval_a["context_recall"]["score"],
+                                "context_precision": eval_a["context_precision"]["score"],
+                                "hit_at_k": 1.0, "mrr": 1.0,
+                                "latency_retrieval_ms": 100.0, "latency_generation_ms": 400.0,
+                                "llm_judge_score": eval_a["avg_score"],
+                                "query_type": item.get("type", "factual"),
+                                "eval_status": "success",
+                            }, SETTING_A, query_id=f"q_{idx+1}")
+                            insert_eval_result(exp_id, q, answer_b["answer"], {
+                                "setting": "B",
+                                "faithfulness": eval_b["faithfulness"]["score"],
+                                "answer_relevancy": eval_b["answer_relevance"]["score"],
+                                "context_recall": eval_b["context_recall"]["score"],
+                                "context_precision": eval_b["context_precision"]["score"],
+                                "hit_at_k": 1.0, "mrr": 1.0,
+                                "latency_retrieval_ms": 120.0, "latency_generation_ms": 400.0,
+                                "llm_judge_score": eval_b["avg_score"],
+                                "query_type": item.get("type", "factual"),
+                                "eval_status": "success",
+                            }, SETTING_B, query_id=f"q_{idx+1}")
+                        except Exception:
+                            pass
+
+                    except Exception as e:
+                        st.warning(f"Error evaluating question {idx+1}: {e}")
+                        continue
 
 
-            progress_bar.progress(1.0)
-            status_text.markdown("**✅ Evaluation complete!**")
+                progress_bar.progress(1.0)
+                status_text.markdown("**✅ Evaluation complete!**")
 
-            st.session_state.eval_results_a = results_a_list
-            st.session_state.eval_results_b = results_b_list
+                st.session_state.eval_results_a = results_a_list
+                st.session_state.eval_results_b = results_b_list
 
-            # ── Persist run to eval_runs.jsonl ──────────────────────────────
-            import uuid as _uuid, json as _json
-            from pathlib import Path as _Path
+                # ── Persist run to eval_runs.jsonl ──────────────────────────────
+                import uuid as _uuid, json as _json
+                from pathlib import Path as _Path
 
-            def _avg(lst, metric):
-                s = [r["scores"].get(metric, {}).get("score", 0)
-                     for r in lst if not r.get("is_oos")]
-                return round(sum(s) / len(s), 4) if s else 0.0
+                def _avg(lst, metric):
+                    s = [r["scores"].get(metric, {}).get("score", 0)
+                         for r in lst if not r.get("is_oos")]
+                    return round(sum(s) / len(s), 4) if s else 0.0
 
-            _metrics = ["faithfulness", "answer_relevance",
-                        "context_recall", "context_precision"]
+                _metrics = ["faithfulness", "answer_relevance",
+                            "context_recall", "context_precision"]
 
-            _run_record = {
-                "type": "full_eval_run",
-                "run_id": str(_uuid.uuid4())[:8],
-                "timestamp": __import__('time').strftime("%Y-%m-%dT%H:%M:%SZ",
-                                                          __import__('time').gmtime()),
-                "num_questions": num_eval,
-                "aggregate": {
-                    "A": {m: _avg(results_a_list, m) for m in _metrics},
-                    "B": {m: _avg(results_b_list, m) for m in _metrics},
-                },
-                "per_question": [
-                    {
-                        "q": results_a_list[_i]["question"],
-                        "type": results_a_list[_i].get("type", ""),
-                        "is_oos": results_a_list[_i].get("is_oos", False),
-                        "answer_a": results_a_list[_i].get("answer", ""),
-                        "answer_b": (results_b_list[_i].get("answer", "")
-                                     if _i < len(results_b_list) else ""),
-                        "scores_a": {
-                            m: results_a_list[_i]["scores"].get(m, {}).get("score", 0)
-                            for m in _metrics
-                        },
-                        "scores_b": {
-                            m: (results_b_list[_i]["scores"].get(m, {}).get("score", 0)
-                                if _i < len(results_b_list) else 0)
-                            for m in _metrics
-                        },
-                    }
-                    for _i in range(len(results_a_list))
-                ],
-            }
+                _run_record = {
+                    "type": "full_eval_run",
+                    "run_id": str(_uuid.uuid4())[:8],
+                    "timestamp": __import__('time').strftime("%Y-%m-%dT%H:%M:%SZ",
+                                                              __import__('time').gmtime()),
+                    "num_questions": num_eval,
+                    "aggregate": {
+                        "A": {m: _avg(results_a_list, m) for m in _metrics},
+                        "B": {m: _avg(results_b_list, m) for m in _metrics},
+                    },
+                    "per_question": [
+                        {
+                            "q": results_a_list[_i]["question"],
+                            "type": results_a_list[_i].get("type", ""),
+                            "is_oos": results_a_list[_i].get("is_oos", False),
+                            "answer_a": results_a_list[_i].get("answer", ""),
+                            "answer_b": (results_b_list[_i].get("answer", "")
+                                         if _i < len(results_b_list) else ""),
+                            "scores_a": {
+                                m: results_a_list[_i]["scores"].get(m, {}).get("score", 0)
+                                for m in _metrics
+                            },
+                            "scores_b": {
+                                m: (results_b_list[_i]["scores"].get(m, {}).get("score", 0)
+                                    if _i < len(results_b_list) else 0)
+                                for m in _metrics
+                            },
+                        }
+                        for _i in range(len(results_a_list))
+                    ],
+                }
 
-            _log_path = _Path("logs/eval_runs.jsonl")
-            _log_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(_log_path, "a", encoding="utf-8") as _f:
-                _f.write(_json.dumps(_run_record, ensure_ascii=False) + "\n")
-            st.toast("💾 Run saved to evaluation history", icon="📜")
+                _log_path = _Path("logs/eval_runs.jsonl")
+                _log_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(_log_path, "a", encoding="utf-8") as _f:
+                    _f.write(_json.dumps(_run_record, ensure_ascii=False) + "\n")
+                st.toast("💾 Run saved to evaluation history", icon="📜")
 
-    # Display results if available
-    if st.session_state.eval_results_a and st.session_state.eval_results_b:
-        results_a = st.session_state.eval_results_a
-        results_b = st.session_state.eval_results_b
+        # Display results if available
+        if st.session_state.eval_results_a and st.session_state.eval_results_b:
+            results_a = st.session_state.eval_results_a
+            results_b = st.session_state.eval_results_b
 
-        # Aggregate scores
-        def avg_metric(results, metric):
-            scores = [r["scores"].get(metric, {}).get("score", 0) for r in results if not r.get("is_oos")]
-            return sum(scores) / len(scores) if scores else 0
+            # Aggregate scores
+            def avg_metric(results, metric):
+                scores = [r["scores"].get(metric, {}).get("score", 0) for r in results if not r.get("is_oos")]
+                return sum(scores) / len(scores) if scores else 0
 
-        metrics = ["faithfulness", "answer_relevance", "context_recall", "context_precision"]
-        avg_a = {m: avg_metric(results_a, m) for m in metrics}
-        avg_b = {m: avg_metric(results_b, m) for m in metrics}
+            metrics = ["faithfulness", "answer_relevance", "context_recall", "context_precision"]
+            avg_a = {m: avg_metric(results_a, m) for m in metrics}
+            avg_b = {m: avg_metric(results_b, m) for m in metrics}
 
-        # Metric Scorecards
-        st.markdown("### 📊 Metric Scorecards")
-        m_cols = st.columns(4)
-        metric_labels = ["Faithfulness", "Answer Relevance", "Context Recall", "Context Precision"]
+            # Metric Scorecards
+            st.markdown("### 📊 Metric Scorecards")
+            m_cols = st.columns(4)
+            metric_labels = ["Faithfulness", "Answer Relevance", "Context Recall", "Context Precision"]
 
-        for i, (metric, label) in enumerate(zip(metrics, metric_labels)):
-            with m_cols[i]:
-                delta = avg_b[metric] - avg_a[metric]
-                delta_str = f"{delta:+.3f}"
-                st.metric(
-                    label=label,
-                    value=f"{avg_a[metric]:.3f} | {avg_b[metric]:.3f}",
-                    delta=f"B {delta_str}",
-                    delta_color="normal" if delta >= 0 else "inverse",
-                )
+            for i, (metric, label) in enumerate(zip(metrics, metric_labels)):
+                with m_cols[i]:
+                    delta = avg_b[metric] - avg_a[metric]
+                    delta_str = f"{delta:+.3f}"
+                    st.metric(
+                        label=label,
+                        value=f"{avg_a[metric]:.3f} | {avg_b[metric]:.3f}",
+                        delta=f"B {delta_str}",
+                        delta_color="normal" if delta >= 0 else "inverse",
+                    )
 
-        st.markdown(render_ornament(), unsafe_allow_html=True)
+            st.markdown(render_ornament(), unsafe_allow_html=True)
 
-        # Radar Chart
-        st.markdown("### 🎯 Radar Comparison")
-        avg_scores_a = {m: {"score": avg_a[m]} for m in metrics}
-        avg_scores_b = {m: {"score": avg_b[m]} for m in metrics}
+            # Radar Chart
+            st.markdown("### 🎯 Radar Comparison")
+            avg_scores_a = {m: {"score": avg_a[m]} for m in metrics}
+            avg_scores_b = {m: {"score": avg_b[m]} for m in metrics}
 
-        radar_fig = create_radar_chart(avg_scores_a, avg_scores_b)
-        st.plotly_chart(radar_fig, use_container_width=True)
+            radar_fig = create_radar_chart(avg_scores_a, avg_scores_b)
+            st.plotly_chart(radar_fig, use_container_width=True)
 
-        st.markdown(render_ornament(), unsafe_allow_html=True)
+            st.markdown(render_ornament(), unsafe_allow_html=True)
 
-        # Per-question Results Table
-        st.markdown("### 📋 Per-Question Results")
+            # Per-question Results Table
+            st.markdown("### 📋 Per-Question Results")
 
-        table_data = []
-        for i in range(len(results_a)):
-            ra = results_a[i]
-            rb = results_b[i] if i < len(results_b) else ra
-
-            row = {
-                "Question": ra["question"][:60] + "..." if len(ra["question"]) > 60 else ra["question"],
-                "Type": ra.get("type", ""),
-                "Faith. A": f"{ra['scores'].get('faithfulness', {}).get('score', 0):.2f}",
-                "Faith. B": f"{rb['scores'].get('faithfulness', {}).get('score', 0):.2f}",
-                "Rel. A": f"{ra['scores'].get('answer_relevance', {}).get('score', 0):.2f}",
-                "Rel. B": f"{rb['scores'].get('answer_relevance', {}).get('score', 0):.2f}",
-                "Avg A": f"{ra['scores'].get('avg_score', 0):.2f}",
-                "Avg B": f"{rb['scores'].get('avg_score', 0):.2f}",
-            }
-            table_data.append(row)
-
-        df = pd.DataFrame(table_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-        # Expandable detail view
-        with st.expander("🔍 Detailed Question Analysis"):
+            table_data = []
             for i in range(len(results_a)):
                 ra = results_a[i]
                 rb = results_b[i] if i < len(results_b) else ra
-                st.markdown(f"**Q{i+1}: {ra['question']}**")
-                if not ra.get("is_oos"):
-                    detail_cols = st.columns(2)
-                    with detail_cols[0]:
-                        st.markdown(f"**Setting A Answer:** {ra.get('answer', 'N/A')[:300]}...")
-                    with detail_cols[1]:
-                        st.markdown(f"**Setting B Answer:** {rb.get('answer', 'N/A')[:300]}...")
-                else:
-                    st.markdown(f"Out-of-scope — Guardrail {'✅ Correct' if ra.get('oos_correct') else '❌ Missed'}")
-                st.markdown("---")
 
-    # ── Evaluation History ───────────────────────────────────────────────────
-    st.markdown(render_ornament(), unsafe_allow_html=True)
-    st.markdown("### 📜 Evaluation History")
-    st.markdown("*All past evaluation runs stored in `logs/eval_runs.jsonl`*")
+                row = {
+                    "Question": ra["question"][:60] + "..." if len(ra["question"]) > 60 else ra["question"],
+                    "Type": ra.get("type", ""),
+                    "Faith. A": f"{ra['scores'].get('faithfulness', {}).get('score', 0):.2f}",
+                    "Faith. B": f"{rb['scores'].get('faithfulness', {}).get('score', 0):.2f}",
+                    "Rel. A": f"{ra['scores'].get('answer_relevance', {}).get('score', 0):.2f}",
+                    "Rel. B": f"{rb['scores'].get('answer_relevance', {}).get('score', 0):.2f}",
+                    "Avg A": f"{ra['scores'].get('avg_score', 0):.2f}",
+                    "Avg B": f"{rb['scores'].get('avg_score', 0):.2f}",
+                }
+                table_data.append(row)
 
-    import json as _json_h
-    from pathlib import Path as _Path_h
+            df = pd.DataFrame(table_data)
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
-    _hist_path = _Path_h("logs/eval_runs.jsonl")
-    _history_runs = []
-    if _hist_path.exists():
-        with open(_hist_path, "r", encoding="utf-8") as _hf:
-            for _line in _hf:
-                _line = _line.strip()
-                if not _line:
-                    continue
-                try:
-                    _rec = _json_h.loads(_line)
-                    if _rec.get("type") == "full_eval_run":
-                        _history_runs.append(_rec)
-                except Exception:
-                    pass
-
-    if not _history_runs:
-        st.info("📭 No evaluation history yet. Run an evaluation to start building your history!")
-    else:
-        _history_runs_sorted = list(reversed(_history_runs))  # newest first
-        st.markdown(f"**{len(_history_runs_sorted)} run(s) recorded**")
-
-        # Summary table across all runs
-        _summary_rows = []
-        for _r in _history_runs_sorted:
-            _agg = _r.get("aggregate", {})
-            _agg_a = _agg.get("A", {})
-            _agg_b = _agg.get("B", {})
-            _avg_a = round(sum(_agg_a.values()) / max(len(_agg_a), 1), 3) if _agg_a else 0
-            _avg_b = round(sum(_agg_b.values()) / max(len(_agg_b), 1), 3) if _agg_b else 0
-            _summary_rows.append({
-                "Run ID":    _r.get("run_id", "—"),
-                "Timestamp": _r.get("timestamp", "—"),
-                "Questions": _r.get("num_questions", "—"),
-                "Avg A":     f"{_avg_a:.3f}",
-                "Avg B":     f"{_avg_b:.3f}",
-                "Faith. A":  f"{_agg_a.get('faithfulness', 0):.3f}",
-                "Faith. B":  f"{_agg_b.get('faithfulness', 0):.3f}",
-                "Rel. A":    f"{_agg_a.get('answer_relevance', 0):.3f}",
-                "Rel. B":    f"{_agg_b.get('answer_relevance', 0):.3f}",
-                "Recall A":  f"{_agg_a.get('context_recall', 0):.3f}",
-                "Recall B":  f"{_agg_b.get('context_recall', 0):.3f}",
-            })
-
-        _df_hist = pd.DataFrame(_summary_rows)
-        st.dataframe(_df_hist, use_container_width=True, hide_index=True)
-
-        # Score trend chart (only when > 1 run)
-        if len(_history_runs_sorted) > 1:
-            st.markdown("#### 📈 Score Trend Across Runs")
-            _run_labels = [_r.get("run_id", str(_ii))
-                           for _ii, _r in enumerate(reversed(_history_runs_sorted))]
-            _trend_a = [
-                round(sum(_r["aggregate"].get("A", {}).values()) /
-                      max(len(_r["aggregate"].get("A", {"x": 1})), 1), 3)
-                for _r in reversed(_history_runs_sorted)
-            ]
-            _trend_b = [
-                round(sum(_r["aggregate"].get("B", {}).values()) /
-                      max(len(_r["aggregate"].get("B", {"x": 1})), 1), 3)
-                for _r in reversed(_history_runs_sorted)
-            ]
-            _fig_trend = go.Figure()
-            _fig_trend.add_trace(go.Scatter(
-                x=_run_labels, y=_trend_a, mode="lines+markers",
-                name="Setting A", line=dict(color=ROYAL_GOLD, width=2),
-                marker=dict(size=8, color=ROYAL_GOLD),
-            ))
-            _fig_trend.add_trace(go.Scatter(
-                x=_run_labels, y=_trend_b, mode="lines+markers",
-                name="Setting B", line=dict(color=EMBER_ORANGE, width=2),
-                marker=dict(size=8, color=EMBER_ORANGE),
-            ))
-            _fig_trend.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                xaxis=dict(title="Run ID", color=WARM_CREAM,
-                           gridcolor="rgba(212,175,55,0.1)"),
-                yaxis=dict(title="Avg Score", range=[0, 1], color=WARM_CREAM,
-                           gridcolor="rgba(212,175,55,0.1)"),
-                legend=dict(font=dict(color=WARM_CREAM),
-                            bgcolor="rgba(26,18,13,0.8)",
-                            bordercolor="rgba(212,175,55,0.2)", borderwidth=1),
-                height=280, margin=dict(l=40, r=20, t=10, b=40),
-            )
-            st.plotly_chart(_fig_trend, use_container_width=True)
-
-        # Per-run expandable detail
-        st.markdown("#### 🔍 Per-Run Details")
-        for _idx_r, _run in enumerate(_history_runs_sorted):
-            _label = (
-                f"Run {_run.get('run_id', _idx_r)}  ·  "
-                f"{_run.get('timestamp', '?')}  ·  "
-                f"{_run.get('num_questions', '?')} questions"
-            )
-            with st.expander(_label):
-                _agg = _run.get("aggregate", {})
-                _col_a2, _col_b2 = st.columns(2)
-                with _col_a2:
-                    st.markdown("**Setting A Averages**")
-                    for _mk, _mv in _agg.get("A", {}).items():
-                        st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
-                with _col_b2:
-                    st.markdown("**Setting B Averages**")
-                    for _mk, _mv in _agg.get("B", {}).items():
-                        st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
-                st.markdown("---")
-                _pq_data = []
-                for _pq in _run.get("per_question", []):
-                    _sa = _pq.get("scores_a", {})
-                    _sb = _pq.get("scores_b", {})
-                    _pq_data.append({
-                        "Question": _pq["q"][:70] + "..." if len(_pq["q"]) > 70 else _pq["q"],
-                        "Type": _pq.get("type", ""),
-                        "OOS": "✅" if _pq.get("is_oos") else "",
-                        "Faith A": f"{_sa.get('faithfulness', 0):.2f}",
-                        "Faith B": f"{_sb.get('faithfulness', 0):.2f}",
-                        "Rel A":   f"{_sa.get('answer_relevance', 0):.2f}",
-                        "Rel B":   f"{_sb.get('answer_relevance', 0):.2f}",
-                        "Avg A":   f"{round(sum(_sa.values()) / max(len(_sa), 1), 2):.2f}",
-                        "Avg B":   f"{round(sum(_sb.values()) / max(len(_sb), 1), 2):.2f}",
-                    })
-                if _pq_data:
-                    st.dataframe(pd.DataFrame(_pq_data),
-                                 use_container_width=True, hide_index=True)
+            # Expandable detail view
+            with st.expander("🔍 Detailed Question Analysis"):
+                for i in range(len(results_a)):
+                    ra = results_a[i]
+                    rb = results_b[i] if i < len(results_b) else ra
+                    st.markdown(f"**Q{i+1}: {ra['question']}**")
+                    if not ra.get("is_oos"):
+                        detail_cols = st.columns(2)
+                        with detail_cols[0]:
+                            st.markdown(f"**Setting A Answer:** {ra.get('answer', 'N/A')[:300]}...")
+                        with detail_cols[1]:
+                            st.markdown(f"**Setting B Answer:** {rb.get('answer', 'N/A')[:300]}...")
+                    else:
+                        st.markdown(f"Out-of-scope — Guardrail {'✅ Correct' if ra.get('oos_correct') else '❌ Missed'}")
+                    st.markdown("---")
 
 
-# ═══════════════════════════════════════════
-# PAGE 3: SEARCH ANALYTICS
-# ═══════════════════════════════════════════
+    with tab_history:
+        # ── Evaluation History ───────────────────────────────────────────────────
+        st.markdown(render_ornament(), unsafe_allow_html=True)
+        st.markdown("### 📜 Evaluation History")
+        st.markdown("*All past evaluation runs stored in `logs/eval_runs.jsonl`*")
+
+        import json as _json_h
+        from pathlib import Path as _Path_h
+
+        _hist_path = _Path_h("logs/eval_runs.jsonl")
+        _history_runs = []
+        if _hist_path.exists():
+            with open(_hist_path, "r", encoding="utf-8") as _hf:
+                for _line in _hf:
+                    _line = _line.strip()
+                    if not _line:
+                        continue
+                    try:
+                        _rec = _json_h.loads(_line)
+                        if _rec.get("type") == "full_eval_run":
+                            _history_runs.append(_rec)
+                    except Exception:
+                        pass
+
+        if not _history_runs:
+            st.info("📭 No evaluation history yet. Run an evaluation to start building your history!")
+        else:
+            _history_runs_sorted = list(reversed(_history_runs))  # newest first
+            st.markdown(f"**{len(_history_runs_sorted)} run(s) recorded**")
+
+            # Summary table across all runs
+            _summary_rows = []
+            for _r in _history_runs_sorted:
+                _agg = _r.get("aggregate", {})
+                _agg_a = _agg.get("A", {})
+                _agg_b = _agg.get("B", {})
+                _avg_a = round(sum(_agg_a.values()) / max(len(_agg_a), 1), 3) if _agg_a else 0
+                _avg_b = round(sum(_agg_b.values()) / max(len(_agg_b), 1), 3) if _agg_b else 0
+                _summary_rows.append({
+                    "Run ID":    _r.get("run_id", "—"),
+                    "Timestamp": _r.get("timestamp", "—"),
+                    "Questions": _r.get("num_questions", "—"),
+                    "Avg A":     f"{_avg_a:.3f}",
+                    "Avg B":     f"{_avg_b:.3f}",
+                    "Faith. A":  f"{_agg_a.get('faithfulness', 0):.3f}",
+                    "Faith. B":  f"{_agg_b.get('faithfulness', 0):.3f}",
+                    "Rel. A":    f"{_agg_a.get('answer_relevance', 0):.3f}",
+                    "Rel. B":    f"{_agg_b.get('answer_relevance', 0):.3f}",
+                    "Recall A":  f"{_agg_a.get('context_recall', 0):.3f}",
+                    "Recall B":  f"{_agg_b.get('context_recall', 0):.3f}",
+                })
+
+            _df_hist = pd.DataFrame(_summary_rows)
+            st.dataframe(_df_hist, use_container_width=True, hide_index=True)
+
+            # Score trend chart (only when > 1 run)
+            if len(_history_runs_sorted) > 1:
+                st.markdown("#### 📈 Score Trend Across Runs")
+                _run_labels = [_r.get("run_id", str(_ii))
+                               for _ii, _r in enumerate(reversed(_history_runs_sorted))]
+                _trend_a = [
+                    round(sum(_r["aggregate"].get("A", {}).values()) /
+                          max(len(_r["aggregate"].get("A", {"x": 1})), 1), 3)
+                    for _r in reversed(_history_runs_sorted)
+                ]
+                _trend_b = [
+                    round(sum(_r["aggregate"].get("B", {}).values()) /
+                          max(len(_r["aggregate"].get("B", {"x": 1})), 1), 3)
+                    for _r in reversed(_history_runs_sorted)
+                ]
+                _fig_trend = go.Figure()
+                _fig_trend.add_trace(go.Scatter(
+                    x=_run_labels, y=_trend_a, mode="lines+markers",
+                    name="Setting A", line=dict(color=ROYAL_GOLD, width=2),
+                    marker=dict(size=8, color=ROYAL_GOLD),
+                ))
+                _fig_trend.add_trace(go.Scatter(
+                    x=_run_labels, y=_trend_b, mode="lines+markers",
+                    name="Setting B", line=dict(color=EMBER_ORANGE, width=2),
+                    marker=dict(size=8, color=EMBER_ORANGE),
+                ))
+                _fig_trend.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    xaxis=dict(title="Run ID", color=WARM_CREAM,
+                               gridcolor="rgba(212,175,55,0.1)"),
+                    yaxis=dict(title="Avg Score", range=[0, 1], color=WARM_CREAM,
+                               gridcolor="rgba(212,175,55,0.1)"),
+                    legend=dict(font=dict(color=WARM_CREAM),
+                                bgcolor="rgba(26,18,13,0.8)",
+                                bordercolor="rgba(212,175,55,0.2)", borderwidth=1),
+                    height=280, margin=dict(l=40, r=20, t=10, b=40),
+                )
+                st.plotly_chart(_fig_trend, use_container_width=True)
+
+            # Per-run expandable detail
+            st.markdown("#### 🔍 Per-Run Details")
+            for _idx_r, _run in enumerate(_history_runs_sorted):
+                _label = (
+                    f"Run {_run.get('run_id', _idx_r)}  ·  "
+                    f"{_run.get('timestamp', '?')}  ·  "
+                    f"{_run.get('num_questions', '?')} questions"
+                )
+                with st.expander(_label):
+                    _agg = _run.get("aggregate", {})
+                    _col_a2, _col_b2 = st.columns(2)
+                    with _col_a2:
+                        st.markdown("**Setting A Averages**")
+                        for _mk, _mv in _agg.get("A", {}).items():
+                            st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
+                    with _col_b2:
+                        st.markdown("**Setting B Averages**")
+                        for _mk, _mv in _agg.get("B", {}).items():
+                            st.markdown(f"- {_mk.replace('_', ' ').title()}: `{_mv:.3f}`")
+                    st.markdown("---")
+                    _pq_data = []
+                    for _pq in _run.get("per_question", []):
+                        _sa = _pq.get("scores_a", {})
+                        _sb = _pq.get("scores_b", {})
+                        _pq_data.append({
+                            "Question": _pq["q"][:70] + "..." if len(_pq["q"]) > 70 else _pq["q"],
+                            "Type": _pq.get("type", ""),
+                            "OOS": "✅" if _pq.get("is_oos") else "",
+                            "Faith A": f"{_sa.get('faithfulness', 0):.2f}",
+                            "Faith B": f"{_sb.get('faithfulness', 0):.2f}",
+                            "Rel A":   f"{_sa.get('answer_relevance', 0):.2f}",
+                            "Rel B":   f"{_sb.get('answer_relevance', 0):.2f}",
+                            "Avg A":   f"{round(sum(_sa.values()) / max(len(_sa), 1), 2):.2f}",
+                            "Avg B":   f"{round(sum(_sb.values()) / max(len(_sb), 1), 2):.2f}",
+                        })
+                    if _pq_data:
+                        st.dataframe(pd.DataFrame(_pq_data),
+                                     use_container_width=True, hide_index=True)
+
+
+    # ═══════════════════════════════════════════
+    # PAGE 3: SEARCH ANALYTICS
+    # ═══════════════════════════════════════════
 
 elif page == "📈 Search Analytics":
     st.markdown("# 📈 Royal Intelligence Report")
