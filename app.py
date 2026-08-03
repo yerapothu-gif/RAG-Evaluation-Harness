@@ -1,5 +1,5 @@
 """
-🏰 Baahubali RAG Evaluation Harness — Main Streamlit Application
+:material/fort: Baahubali RAG Evaluation Harness — Main Streamlit Application
 A cinematic, royal-themed RAG pipeline with dual-retrieval comparison,
 LLM-as-a-Judge evaluation, and interactive dashboards.
 """
@@ -17,7 +17,7 @@ from typing import Optional, List, Dict
 # --- Page Configuration (must be first Streamlit call) ---
 st.set_page_config(
     page_title="Mahishmati Archives — Baahubali RAG",
-    page_icon="⚔️",
+    page_icon=":material/shield:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -95,18 +95,18 @@ def build_all_indexes():
 # ═══════════════════════════════════════════
 
 with st.sidebar:
-    st.markdown("# ⚔️ Mahishmati\nArchives")
+    st.markdown("# :material/shield: Mahishmati\nArchives")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     # Dark/Light Mode Toggle
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🌙 Dark", use_container_width=True,
+        if st.button(":material/dark_mode: Dark", use_container_width=True,
                       type="primary" if st.session_state.dark_mode else "secondary"):
             st.session_state.dark_mode = True
             st.rerun()
     with col2:
-        if st.button("☀️ Light", use_container_width=True,
+        if st.button(":material/light_mode: Light", use_container_width=True,
                       type="primary" if not st.session_state.dark_mode else "secondary"):
             st.session_state.dark_mode = False
             st.rerun()
@@ -114,17 +114,17 @@ with st.sidebar:
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     # Navigation
-    st.markdown("### 📜 Navigation")
+    st.markdown("### :material/history_edu: Navigation")
     page = st.radio(
         "Select Page",
-        ["⚔️ Query Engine", "📊 Evaluation Harness", "📈 Search Analytics", "🕸️ Character Map"],
+        [":material/shield: Query Engine", ":material/bar_chart: Evaluation Harness", ":material/show_chart: Search Analytics", ":material/hub: Character Map"],
         label_visibility="collapsed",
     )
 
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     # System Status
-    st.markdown("### 🏰 System Status")
+    st.markdown("### :material/fort: System Status")
 
     # Check all 3 provider keys
     has_groq   = bool(GROQ_API_KEY and not GROQ_API_KEY.startswith("your_"))
@@ -138,15 +138,15 @@ with st.sidebar:
         if has_groq:   providers.append("Groq")
         if has_gemini: providers.append("Gemini")
         if has_grok:   providers.append("Grok")
-        llm_status = f"✅ Pooled: {' + '.join(providers)}"
+        llm_status = f":material/check_circle: Pooled: {' + '.join(providers)}"
     elif has_groq:
-        llm_status = "✅ Groq (llama-3.3-70b)"
+        llm_status = ":material/check_circle: Groq (llama-3.3-70b)"
     elif has_gemini:
-        llm_status = "✅ Gemini (gemini-2.0-flash)"
+        llm_status = ":material/check_circle: Gemini (gemini-2.0-flash)"
     elif has_grok:
-        llm_status = "✅ Grok (grok-3-mini-fast)"
+        llm_status = ":material/check_circle: Grok (grok-3-mini-fast)"
     elif has_custom:
-        llm_status = "✅ Custom Key Active"
+        llm_status = ":material/check_circle: Custom Key Active"
     else:
         llm_status = "⚡ Offline Direct Synthesis"
 
@@ -163,18 +163,18 @@ with st.sidebar:
                 st.error(f"Index build failed: {e}")
 
     if st.session_state.index_built:
-        st.markdown(f"**Vector Index:** ✅ Built")
+        st.markdown(f"**Vector Index:** :material/check_circle: Built")
         st.markdown(f"**Setting A Chunks:** {len(st.session_state.chunks_a)}")
         st.markdown(f"**Setting B Chunks:** {len(st.session_state.chunks_b)}")
     else:
-        st.markdown("**Vector Index:** ⏳ Building...")
+        st.markdown("**Vector Index:** :material/hourglass_empty: Building...")
 
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     # Settings Info
-    with st.expander("⚙️ Retrieval & API Settings"):
+    with st.expander(":material/settings: Retrieval & API Settings"):
         custom_key_val = st.text_input(
-            "🔑 API Key Override",
+            ":material/key: API Key Override",
             value=st.session_state.get("custom_api_key", ""),
             type="password",
             help="Optional: Paste a valid xAI / OpenAI API key to override the key in .env"
@@ -182,7 +182,7 @@ with st.sidebar:
         if custom_key_val:
             st.session_state.custom_api_key = custom_key_val.strip()
 
-        enable_expansion = st.checkbox("🧠 Enable AI Query Expansion", value=True, help="Use the LLM to rewrite and optimize your query for better retrieval.")
+        enable_expansion = st.checkbox(":material/psychology: Enable AI Query Expansion", value=True, help="Use the LLM to rewrite and optimize your query for better retrieval.")
         st.session_state.enable_query_expansion = enable_expansion
 
         st.markdown(f"""
@@ -297,13 +297,13 @@ def create_radar_chart(scores_a: dict, scores_b: dict) -> go.Figure:
 # PAGE 1: QUERY ENGINE
 # ═══════════════════════════════════════════
 
-if page == "⚔️ Query Engine":
-    st.markdown("# ⚔️ Royal Query Engine")
+if page == ":material/shield: Query Engine":
+    st.markdown("# :material/shield: Royal Query Engine")
     st.markdown("*Summon knowledge from the Mahishmati Archives*")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
     # Preset query pills
-    st.markdown("##### 🎯 Quick Queries")
+    st.markdown("##### :material/target: Quick Queries")
     pill_cols = st.columns(4)
     preset_queries = [
         "Why did Kattappa kill Baahubali?",
@@ -321,17 +321,17 @@ if page == "⚔️ Query Engine":
     # Main query form (supports Enter key & Button click)
     with st.form(key="query_form", clear_on_submit=False):
         query = st.text_input(
-            "🔍 Ask the Royal Archivist",
+            ":material/search: Ask the Royal Archivist",
             placeholder="Enter your question about the Baahubali saga... (Press Enter or click below)",
             key="user_query_text",
         )
-        submitted = st.form_submit_button("⚔️ Seek Knowledge", type="primary", use_container_width=True)
+        submitted = st.form_submit_button(":material/shield: Seek Knowledge", type="primary", use_container_width=True)
 
     active_query = query.strip() if (submitted and query.strip()) else ""
 
     if active_query:
         if not st.session_state.index_built:
-            st.error("⏳ Archives are still being built. Please wait...")
+            st.error(":material/hourglass_empty: Archives are still being built. Please wait...")
         else:
             custom_key = st.session_state.get("custom_api_key")
 
@@ -339,7 +339,7 @@ if page == "⚔️ Query Engine":
             from src.query_understanding import correct_spelling
             
             normalized_query = active_query
-            with st.spinner("✍️ Checking spelling..."):
+            with st.spinner(":material/edit: Checking spelling..."):
                 normalized_query = correct_spelling(active_query, custom_api_key=custom_key)
                 
             if normalized_query.lower() != active_query.lower():
@@ -372,29 +372,29 @@ if page == "⚔️ Query Engine":
                 search_query = active_query
                 if st.session_state.get("enable_query_expansion", False):
                     from src.query_understanding import expand_query
-                    with st.spinner("🧠 Optimizing search query..."):
+                    with st.spinner(":material/psychology: Optimizing search query..."):
                         search_query = expand_query(active_query, custom_api_key=custom_key)
                     
                     if search_query != active_query:
                         st.info(f"**Original:** {active_query}\n\n**Expanded Search:** {search_query}")
 
                 # Step 4: Run dual retrieval
-                with st.spinner("⚔️ Consulting the Royal Archives..."):
+                with st.spinner(":material/shield: Consulting the Royal Archives..."):
                     results = run_query(search_query, "both", custom_api_key=custom_key)
 
                 # Display side-by-side results
                 col_a, col_b = st.columns(2)
 
                 with col_a:
-                    st.markdown("### 🟡 Setting A — Dense Vector")
+                    st.markdown("### :material/radio_button_checked: Setting A — Dense Vector")
                     if "A" in results:
                         r = results["A"]
-                        st.markdown(f"⏱️ Response time: **{r['time']:.2f}s**")
-                        st.markdown(f"📊 Tokens used: **{r['answer']['tokens_used']}**")
+                        st.markdown(f":material/timer: Response time: **{r['time']:.2f}s**")
+                        st.markdown(f":material/bar_chart: Tokens used: **{r['answer']['tokens_used']}**")
                         st.markdown("---")
                         st.markdown(r["answer"]["answer"])
 
-                        with st.expander(f"📄 Context Chunks ({len(r['chunks'])} retrieved)"):
+                        with st.expander(f":material/description: Context Chunks ({len(r['chunks'])} retrieved)"):
                             for i, chunk in enumerate(r["chunks"]):
                                 sim = chunk.get("similarity", 0)
                                 st.markdown(f"**Chunk {i+1}** (similarity: {sim:.4f})")
@@ -402,15 +402,15 @@ if page == "⚔️ Query Engine":
                                 st.markdown("---")
 
                 with col_b:
-                    st.markdown("### 🟠 Setting B — Hybrid RRF")
+                    st.markdown("### :material/radio_button_checked: Setting B — Hybrid RRF")
                     if "B" in results:
                         r = results["B"]
-                        st.markdown(f"⏱️ Response time: **{r['time']:.2f}s**")
-                        st.markdown(f"📊 Tokens used: **{r['answer']['tokens_used']}**")
+                        st.markdown(f":material/timer: Response time: **{r['time']:.2f}s**")
+                        st.markdown(f":material/bar_chart: Tokens used: **{r['answer']['tokens_used']}**")
                         st.markdown("---")
                         st.markdown(r["answer"]["answer"])
 
-                        with st.expander(f"📄 Context Chunks ({len(r['chunks'])} retrieved)"):
+                        with st.expander(f":material/description: Context Chunks ({len(r['chunks'])} retrieved)"):
                             for i, chunk in enumerate(r["chunks"]):
                                 rrf = chunk.get("rrf_score", 0)
                                 st.markdown(f"**Chunk {i+1}** (RRF score: {rrf:.6f})")
@@ -437,12 +437,12 @@ if page == "⚔️ Query Engine":
 # PAGE 2: EVALUATION HARNESS
 # ═══════════════════════════════════════════
 
-elif page == "📊 Evaluation Harness":
-    st.markdown("# 📊 Royal Evaluation Chamber")
+elif page == ":material/bar_chart: Evaluation Harness":
+    st.markdown("# :material/bar_chart: Royal Evaluation Chamber")
     st.markdown("*Measure the worthiness of each retrieval strategy*")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
-    tab_run, tab_history = st.tabs(["🚀 Run Evaluation", "📜 Evaluation History"])
+    tab_run, tab_history = st.tabs([":material/rocket_launch: Run Evaluation", ":material/history_edu: Evaluation History"])
 
     with tab_run:
         # Load test set
@@ -461,7 +461,7 @@ elif page == "📊 Evaluation Harness":
             st.markdown(f"Distribution: {', '.join(f'{t}: {c}' for t, c in type_counts.items())}")
 
         with col_actions:
-            if st.button("🔄 Re-generate Test Set (LLM)", use_container_width=True):
+            if st.button(":material/sync: Re-generate Test Set (LLM)", use_container_width=True):
                 if has_groq or has_gemini or has_grok or has_custom:
                     with st.spinner("Generating test set with LLM-as-Teacher..."):
                         new_set = generate_test_set(20)
@@ -477,9 +477,9 @@ elif page == "📊 Evaluation Harness":
         # Select how many to evaluate
         num_eval = st.slider("Questions to evaluate", 1, len(test_set), min(5, len(test_set)))
 
-        if st.button("⚔️ Run Full Evaluation", type="primary", use_container_width=True):
+        if st.button(":material/shield: Run Full Evaluation", type="primary", use_container_width=True):
             if not st.session_state.index_built:
-                st.error("⏳ Archives are still being built. Please wait...")
+                st.error(":material/hourglass_empty: Archives are still being built. Please wait...")
             else:
                 from src.evaluator import run_full_evaluation
                 from src.vector_store import query_collection
@@ -601,7 +601,7 @@ elif page == "📊 Evaluation Harness":
 
 
                 progress_bar.progress(1.0)
-                status_text.markdown("**✅ Evaluation complete!**")
+                status_text.markdown("**:material/check_circle: Evaluation complete!**")
 
                 st.session_state.eval_results_a = results_a_list
                 st.session_state.eval_results_b = results_b_list
@@ -654,7 +654,7 @@ elif page == "📊 Evaluation Harness":
                 _log_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(_log_path, "a", encoding="utf-8") as _f:
                     _f.write(_json.dumps(_run_record, ensure_ascii=False) + "\n")
-                st.toast("💾 Run saved to evaluation history", icon="📜")
+                st.toast("💾 Run saved to evaluation history", icon=":material/history_edu:")
 
         # Display results if available
         if st.session_state.eval_results_a and st.session_state.eval_results_b:
@@ -671,7 +671,7 @@ elif page == "📊 Evaluation Harness":
             avg_b = {m: avg_metric(results_b, m) for m in metrics}
 
             # Metric Scorecards
-            st.markdown("### 📊 Metric Scorecards")
+            st.markdown("### :material/bar_chart: Metric Scorecards")
             m_cols = st.columns(4)
             metric_labels = ["Faithfulness", "Answer Relevance", "Context Recall", "Context Precision"]
 
@@ -689,7 +689,7 @@ elif page == "📊 Evaluation Harness":
             st.markdown(render_ornament(), unsafe_allow_html=True)
 
             # Radar Chart
-            st.markdown("### 🎯 Radar Comparison")
+            st.markdown("### :material/target: Radar Comparison")
             avg_scores_a = {m: {"score": avg_a[m]} for m in metrics}
             avg_scores_b = {m: {"score": avg_b[m]} for m in metrics}
 
@@ -722,7 +722,7 @@ elif page == "📊 Evaluation Harness":
             st.dataframe(df, use_container_width=True, hide_index=True)
 
             # Expandable detail view
-            with st.expander("🔍 Detailed Question Analysis"):
+            with st.expander(":material/search: Detailed Question Analysis"):
                 for i in range(len(results_a)):
                     ra = results_a[i]
                     rb = results_b[i] if i < len(results_b) else ra
@@ -734,14 +734,14 @@ elif page == "📊 Evaluation Harness":
                         with detail_cols[1]:
                             st.markdown(f"**Setting B Answer:** {rb.get('answer', 'N/A')[:300]}...")
                     else:
-                        st.markdown(f"Out-of-scope — Guardrail {'✅ Correct' if ra.get('oos_correct') else '❌ Missed'}")
+                        st.markdown(f"Out-of-scope — Guardrail {':material/check_circle: Correct' if ra.get('oos_correct') else ':material/cancel: Missed'}")
                     st.markdown("---")
 
 
     with tab_history:
         # ── Evaluation History ───────────────────────────────────────────────────
         st.markdown(render_ornament(), unsafe_allow_html=True)
-        st.markdown("### 📜 Evaluation History")
+        st.markdown("### :material/history_edu: Evaluation History")
         st.markdown("*All past evaluation runs stored in `logs/eval_runs.jsonl`*")
 
         import json as _json_h
@@ -763,7 +763,7 @@ elif page == "📊 Evaluation Harness":
                         pass
 
         if not _history_runs:
-            st.info("📭 No evaluation history yet. Run an evaluation to start building your history!")
+            st.info(":material/inbox: No evaluation history yet. Run an evaluation to start building your history!")
         else:
             _history_runs_sorted = list(reversed(_history_runs))  # newest first
             st.markdown(f"**{len(_history_runs_sorted)} run(s) recorded**")
@@ -795,7 +795,7 @@ elif page == "📊 Evaluation Harness":
 
             # Score trend chart (only when > 1 run)
             if len(_history_runs_sorted) > 1:
-                st.markdown("#### 📈 Score Trend Across Runs")
+                st.markdown("#### :material/show_chart: Score Trend Across Runs")
                 _run_labels = [_r.get("run_id", str(_ii))
                                for _ii, _r in enumerate(reversed(_history_runs_sorted))]
                 _trend_a = [
@@ -834,7 +834,7 @@ elif page == "📊 Evaluation Harness":
                 st.plotly_chart(_fig_trend, use_container_width=True)
 
             # Per-run expandable detail
-            st.markdown("#### 🔍 Per-Run Details")
+            st.markdown("#### :material/search: Per-Run Details")
             for _idx_r, _run in enumerate(_history_runs_sorted):
                 _label = (
                     f"Run {_run.get('run_id', _idx_r)}  ·  "
@@ -860,7 +860,7 @@ elif page == "📊 Evaluation Harness":
                         _pq_data.append({
                             "Question": _pq["q"][:70] + "..." if len(_pq["q"]) > 70 else _pq["q"],
                             "Type": _pq.get("type", ""),
-                            "OOS": "✅" if _pq.get("is_oos") else "",
+                            "OOS": ":material/check_circle:" if _pq.get("is_oos") else "",
                             "Faith A": f"{_sa.get('faithfulness', 0):.2f}",
                             "Faith B": f"{_sb.get('faithfulness', 0):.2f}",
                             "Rel A":   f"{_sa.get('answer_relevance', 0):.2f}",
@@ -877,8 +877,8 @@ elif page == "📊 Evaluation Harness":
     # PAGE 3: SEARCH ANALYTICS
     # ═══════════════════════════════════════════
 
-elif page == "📈 Search Analytics":
-    st.markdown("# 📈 Royal Intelligence Report")
+elif page == ":material/show_chart: Search Analytics":
+    st.markdown("# :material/show_chart: Royal Intelligence Report")
     st.markdown("*Track the performance of the Mahishmati Archives*")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 
@@ -902,7 +902,7 @@ elif page == "📈 Search Analytics":
 
         # Category Distribution (Donut Chart)
         with chart_cols[0]:
-            st.markdown("### 📊 Query Category Distribution")
+            st.markdown("### :material/bar_chart: Query Category Distribution")
             if analytics["category_distribution"]:
                 cat_data = analytics["category_distribution"]
                 fig_cat = go.Figure(data=[go.Pie(
@@ -926,7 +926,7 @@ elif page == "📈 Search Analytics":
 
         # Response Time Over Queries (Line Chart)
         with chart_cols[1]:
-            st.markdown("### ⏱️ Response Time Trend")
+            st.markdown("### :material/timer: Response Time Trend")
             if analytics["response_times"]:
                 fig_time = go.Figure()
                 fig_time.add_trace(go.Scatter(
@@ -1011,15 +1011,15 @@ elif page == "📈 Search Analytics":
             st.rerun()
 
     else:
-        st.info("📭 No query data yet. Use the Query Engine to start building analytics!")
+        st.info(":material/inbox: No query data yet. Use the Query Engine to start building analytics!")
 
 
 # ═══════════════════════════════════════════
 # PAGE 4: CHARACTER MAP
 # ═══════════════════════════════════════════
 
-elif page == "🕸️ Character Map":
-    st.markdown("# 🕸️ Mahishmati Dynasty Map")
+elif page == ":material/hub: Character Map":
+    st.markdown("# :material/hub: Mahishmati Dynasty Map")
     st.markdown("*Interactive 3D character relationship graph*")
     st.markdown(render_ornament(), unsafe_allow_html=True)
 

@@ -79,10 +79,10 @@ def classify_query(query: str) -> Tuple[str, float]:
 def get_category_icon(category: str) -> str:
     """Return an icon for each category."""
     icons = {
-        "Character": "👤",
-        "Kingdom": "🏰",
-        "Battle": "⚔️",
-        "Timeline": "📅",
-        "General": "📜",
+        "Character": ":material/person:",
+        "Kingdom": ":material/fort:",
+        "Battle": ":material/shield:",
+        "Timeline": ":material/calendar_today:",
+        "General": ":material/history_edu:",
     }
-    return icons.get(category, "❓")
+    return icons.get(category, ":material/help:")

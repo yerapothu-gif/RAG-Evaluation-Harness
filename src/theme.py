@@ -293,19 +293,19 @@ def get_custom_css(dark_mode: bool = True) -> str:
 
 def render_ornament():
     """Return an ornamental divider HTML."""
-    return '<div class="ornament-divider">━━━ ⚜ ━━━</div>'
+    return '<div class="ornament-divider">━━━ :material/star: ━━━</div>'
 
 
 def render_category_pill(category: str) -> str:
     """Render a styled category pill badge."""
     css_class = f"pill-{category.lower()}"
-    icon = {"Character": "👤", "Kingdom": "🏰", "Battle": "⚔️", "Timeline": "📅", "General": "📜"}.get(category, "❓")
+    icon = {"Character": ":material/person:", "Kingdom": ":material/fort:", "Battle": ":material/shield:", "Timeline": ":material/calendar_today:", "General": ":material/history_edu:"}.get(category, ":material/help:")
     return f'<span class="category-pill {css_class}">{icon} {category}</span>'
 
 
 def render_scope_pill(is_in_scope: bool) -> str:
     """Render an in-scope/out-of-scope pill badge."""
     if is_in_scope:
-        return '<span class="category-pill pill-inscope">✅ In-Scope</span>'
+        return '<span class="category-pill pill-inscope">:material/check_circle: In-Scope</span>'
     else:
-        return '<span class="category-pill pill-outscope">❌ Out-of-Scope</span>'
+        return '<span class="category-pill pill-outscope">:material/cancel: Out-of-Scope</span>'

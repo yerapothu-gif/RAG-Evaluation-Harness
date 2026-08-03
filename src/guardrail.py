@@ -43,7 +43,7 @@ def is_in_scope(query: str) -> Tuple[bool, str, float]:
         if indicator in query_lower:
             return (
                 False,
-                f"⚔️ I cannot answer this question based on the provided document. "
+                f":material/shield: I cannot answer this question based on the provided document. "
                 f"This query appears to be about '{indicator}', which is outside "
                 f"the Baahubali knowledge base. Please ask about the Baahubali movies, "
                 f"characters, kingdoms, or battles.",
@@ -73,7 +73,7 @@ def is_in_scope(query: str) -> Tuple[bool, str, float]:
     # Default: likely out-of-scope
     return (
         False,
-        "⚔️ I cannot answer this question based on the provided document. "
+        ":material/shield: I cannot answer this question based on the provided document. "
         "This query does not appear to be related to the Baahubali movies. "
         "Please ask about characters, kingdoms, battles, or events from the Baahubali saga.",
         0.7,
